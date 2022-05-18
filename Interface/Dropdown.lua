@@ -1,10 +1,9 @@
 local _, ns = ...
 
-local CUI = ns.CUI
-
 -- Variables.
+local CUI = ns.CUI
 local dropdownButtons = {}
-local framePool = {}
+local framePool = {} -- Frame pool specifically for dropdown buttons (i.e. the buttons containing values).
 local dropdown
 
 -- Returns (or creates if there is none available) a dropdown button from the pool.

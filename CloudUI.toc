@@ -7,14 +7,12 @@
 # Libraries.
 Libs/LibStub.lua
 
-# Utils.
-Util.lua
-
 # Init.
-Init.lua
+CloudUI.lua
 
 # Templates.
 Interface/BaseTemplates.lua
 
-# Dropdown.
+# Widgets.
 Interface/Dropdown.lua
+Interface/EditBox.lua
