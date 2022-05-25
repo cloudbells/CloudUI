@@ -2,37 +2,122 @@ local _, ns = ...
 
 -- Variables.
 local CUI = ns.CUI
+local fontSmall, fontNormal, fontBig, fontHuge
+
+-- Script handlers.
+
+-- Called when the given frame is disabled.
+local function DisableableFrame_OnDisable(self)
+    self.isDisabled = true
+    if self.CUIHighlightTexture then
+        self.CUIHighlightTexture:Hide()
+    end
+    if self.CUIPushTexture then
+        self.CUIPushTexture:Hide()
+    end
+end
+
+-- Called when the given frame is enabled.
+local function DisableableFrame_OnEnable(self)
+    self.isDisabled = false
+    if self.CUIHighlightTexture then
+        self.CUIHighlightTexture:Show()
+    end
+    if self.CUIPushTexture then
+        self.CUIPushTexture:Show()
+    end
+end
+
+-- Called when the mouse enters the given frame.
+local function HighlightFrame_OnEnter(self)
+    if not self.isDisabled then
+        self.CUIHighlightTexture:Show()
+    end
+end
+
+-- Called then the mouse leaves the given frame.
+local function HighlightFrame_OnLeave(self)
+    self.CUIHighlightTexture:Hide()
+end
+
+-- Called when a mouse button is pressed on the given frame.
+local function PushableFrame_OnMouseDown(self, button)
+    if not self.isDisabled then
+        if self.CUIHighlightTexture then
+            self.CUIHighlightTexture:Hide()
+        end
+        self.CUIPushTexture:Show()
+    end
+end
+
+-- Called when a mouse button is released on the given frame.
+local function PushableFrame_OnMouseUp(self)
+    self.CUIPushTexture:Hide()
+    if self.CUIHighlightTexture then
+        self.CUIHighlightTexture:Show()
+    end
+end
+
+-- Template functions.
+
+-- Returns true if the given frame is disabled, false otherwise.
+local function IsDisabled(self)
+    return self.isDisabled
+end
+
+-- Sets the color of the frame's background texture to the given values.
+local function SetBackgroundColor(self, r, g, b, a)
+    self.CUIBackgroundTexture:SetColorTexture(r, g, b, a)
+end
+
+-- Resets the given frame's background texture color.
+local function ResetBackgroundColor(self)
+    self:SetColorTexture(0, 0, 0, 1)
+end
+
+-- Sets the colors of the given frame's border textures to the given values.
+local function SetBorderColor(self, r, g, b, a)
+    self.CUITopBorderTexture:SetColorTexture(r, g, b, a)
+    self.CUIRightBorderTexture:SetColorTexture(r, g, b, a)
+    self.CUIBottomBorderTexture:SetColorTexture(r, g, b, a)
+    self.CUILeftBorderTexture:SetColorTexture(r, g, b, a)
+end
+
+-- Resets the given frame's border textures' color.
+local function ResetBorderColor(self)
+    self:SetBorderColor(1, 1, 1, 1)
+end
+
+-- Sets the given frame's highlight texture color to the given values.
+local function SetHighlightColor(self, r, g, b, a)
+    self.CUIHighlightTexture:SetColorTexture(r, g, b, a)
+end
+
+-- Resets the given frame's highlight texture color.
+local function ResetHighlightColor(self)
+    self.CUIHighlightTexture:SetColorTexture(1, 1, 1, 0.3)
+end
+
+-- Sets the given frame's push texture color to the given values.
+local function SetPushColor(self, r, g, b, a)
+    self.CUIPushTexture:SetColorTexture(r, g, b, a)
+end
+
+-- Resets the given frame's push texture color.
+local function ResetPushColor(self)
+    self.CUIPushTexture:SetColorTexture(1, 1, 1, 0.6)
+end
 
 -- Applies the given template to the given frame. Returns true if successful, false otherwise.
 function CUI:ApplyTemplate(frame, template)
-    local success
+    assert(ns.templates[template], "ApplyTemplate: 'template' needs to be a valid template e.g. CUI.templates.BackgroundFrameTemplate")
     local frameName = frame:GetName()
     if template == ns.templates.DisableableFrameTemplate then
         if frame.disableableFrameTemplate then return false end -- We've already applied this template.
-        success = frame:HookScript("OnDisable", function(self)
-            self.isDisabled = true
-            if self.CUIHighlightTexture then
-                self.CUIHighlightTexture:Hide()
-            end
-            if self.CUIPushTexture then
-                self.CUIPushTexture:Hide()
-            end
-        end)
-        if not success then return false end
-        success = frame:HookScript("OnEnable", function(self)
-            self.isDisabled = false
-            if self.CUIHighlightTexture then
-                self.CUIHighlightTexture:Show()
-            end
-            if self.CUIPushTexture then
-                self.CUIPushTexture:Show()
-            end
-        end)
-        if not success then return false end
+        if not frame:HookScript("OnDisable", DisableableFrame_OnDisable) then return false end -- HookScript() returns false if the hook was unsuccessful.
+        if not frame:HookScript("OnEnable", DisableableFrame_OnEnable) then return false end
         frame.isDisabled = frame.IsEnabled and not frame:IsEnabled() or false -- Frame should be disableable regardless of if it's already enableable (buttons etc).
-        frame.IsDisabled = function(self)
-            return self.isDisabled
-        end
+        frame.IsDisabled = IsDisabled
         frame.disableableFrameTemplate = true
     elseif template == ns.templates.BackgroundFrameTemplate then
         if frame.backgroundFrameTemplate then return false end
@@ -40,12 +125,8 @@ function CUI:ApplyTemplate(frame, template)
         CUIBackgroundTexture:SetColorTexture(0, 0, 0, 1)
         CUIBackgroundTexture:SetAllPoints(frame)
         frame.CUIBackgroundTexture = CUIBackgroundTexture
-        frame.SetBackgroundColor = function(self, r, g, b, a)
-            self.CUIBackgroundTexture:SetColorTexture(r, g, b, a)
-        end
-        frame.ResetBackgroundColor = function(self)
-            self:SetColorTexture(0, 0, 0, 1)
-        end
+        frame.SetBackgroundColor = SetBackgroundColor
+        frame.ResetBackgroundColor = ResetBackgroundColor
         frame.backgroundFrameTemplate = true
     elseif template == ns.templates.BorderedFrameTemplate then
         if frame.borderedFrameTemplate then return false end
@@ -69,15 +150,8 @@ function CUI:ApplyTemplate(frame, template)
         CUILeftBorderTexture:SetPoint("BOTTOMRIGHT", frame, "BOTTOMLEFT", 0, -1)
         CUILeftBorderTexture:SetPoint("TOPRIGHT", frame, "TOPLEFT", 0, 1)
         frame.CUILeftBorderTexture = CUILeftBorderTexture
-        frame.SetBorderColor = function(self, r, g, b, a)
-            self.CUITopBorderTexture:SetColorTexture(r, g, b, a)
-            self.CUIRightBorderTexture:SetColorTexture(r, g, b, a)
-            self.CUIBottomBorderTexture:SetColorTexture(r, g, b, a)
-            self.CUILeftBorderTexture:SetColorTexture(r, g, b, a)
-        end
-        frame.ResetBorderColor = function(self)
-            self:SetBorderColor(1, 1, 1, 1)
-        end
+        frame.SetBorderColor = SetBorderColor
+        frame.ResetBorderColor = ResetBorderColor
         frame.borderedFrameTemplate = true
     elseif template == ns.templates.HighlightFrameTemplate then
         if frame.highlightFrameTemplate then return false end
@@ -86,22 +160,10 @@ function CUI:ApplyTemplate(frame, template)
         CUIHighlightTexture:SetAllPoints(frame)
         CUIHighlightTexture:Hide()
         frame.CUIHighlightTexture = CUIHighlightTexture
-        frame.SetHighlightColor = function(self, r, g, b, a)
-            self.CUIHighlightTexture:SetColorTexture(r, g, b, a)
-        end
-        frame.ResetHighlightColor = function(self)
-            self.CUIHighlightTexture:SetColorTexture(1, 1, 1, 0.3)
-        end
-        success = frame:HookScript("OnEnter", function(self)
-            if not self.isDisabled then
-                self.CUIHighlightTexture:Show()
-            end
-        end)
-        if not success then return false end
-        success = frame:HookScript("OnLeave", function(self)
-            self.CUIHighlightTexture:Hide()
-        end)
-        if not success then return false end
+        frame.SetHighlightColor = SetHighlightColor
+        frame.ResetHighlightColor = ResetHighlightColor
+        if not frame:HookScript("OnEnter", HighlightFrame_OnEnter) then return false end
+        if not frame:HookScript("OnLeave", HighlightFrame_OnLeave) then return false end
         frame.highlightFrameTemplate = true
     elseif template == ns.templates.PushableFrameTemplate then
         if frame.pushableFrameTemplate then return false end
@@ -110,69 +172,48 @@ function CUI:ApplyTemplate(frame, template)
         CUIPushTexture:SetAllPoints(frame)
         CUIPushTexture:Hide()
         frame.CUIPushTexture = CUIPushTexture
-        frame.SetPushColor = function(self, r, g, b, a)
-            self.CUIPushTexture:SetColorTexture(r, g, b, a)
-        end
-        frame.ResetPushColor = function(self)
-            self.CUIPushTexture:SetColorTexture(1, 1, 1, 0.6)
-        end
-        success = frame:HookScript("OnMouseDown", function(self)
-            if not self.isDisabled then
-                if self.CUIHighlightTexture then
-                    CUIHighlightTexture:Hide()
-                end
-                self.CUIPushTexture:Show()
-            end
-        end)
-        if not success then return false end
-        success = frame:HookScript("OnMouseUp", function(self)
-            self.CUIPushTexture:Hide()
-            if self.CUIHighlightTexture then
-                CUIHighlightTexture:Show()
-            end
-        end)
+        frame.SetPushColor = SetPushColor
+        frame.ResetPushColor = ResetPushColor
+        if not frame:HookScript("OnMouseDown", PushableFrame_OnMouseDown) then return false end
+        if not frame:HookScript("OnMouseUp", PushableFrame_OnMouseUp) then return false end
         frame.pushableFrameTemplate = true
     end
     return true
 end
 
 -- Initializes the base templates.
-local function Init()
+local function InitFonts()
     -- Fonts.
-    local fontSmall = CreateFont("CUIFontSmallTemplate")
+    fontSmall = CreateFont("CUIFontSmallTemplate")
     fontSmall:SetFont("Fonts/FRIZQT__.ttf", 10, "OUTLINE")
-    ns.fontSmall = fontSmall
-    local fontNormal = CreateFont("CUIFontNormalTemplate")
+    fontNormal = CreateFont("CUIFontNormalTemplate")
     fontNormal:SetFont("Fonts/FRIZQT__.ttf", 12, "OUTLINE")
-    ns.fontNormal = fontNormal
-    local fontBig = CreateFont("CUIFontBigTemplate")
+    fontBig = CreateFont("CUIFontBigTemplate")
     fontBig:SetFont("Fonts/FRIZQT__.ttf", 14, "OUTLINE")
-    ns.fontBig = fontBig
-    local fontHuge = CreateFont("CUIFontHugeTemplate")
+    fontHuge = CreateFont("CUIFontHugeTemplate")
     fontHuge:SetFont("Fonts/FRIZQT__.ttf", 16, "OUTLINE")
-    ns.fontHuge = fontHuge
     -- Frames.
     local disableableFrame = CreateFrame("Frame", "CUIDisableableFrameTemplate", UIParent)
 end
 
--- Returns the small font.
+-- Returns the small font object.
 function CUI:GetFontSmall()
-    return ns.fontSmall
+    return fontSmall
 end
 
--- Returns the normal font.
+-- Returns the normal font object.
 function CUI:GetFontNormal()
-    return ns.fontNormal
+    return fontNormal
 end
 
--- Returns the big font.
+-- Returns the big font object.
 function CUI:GetFontBig()
-    return ns.fontBig
+    return fontBig
 end
 
--- Returns the huge font.
+-- Returns the huge font object.
 function CUI:GetFontHuge()
-    return ns.fontHuge
+    return fontHuge
 end
 
-Init()
+InitFonts()
