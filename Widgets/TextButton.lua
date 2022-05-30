@@ -1,4 +1,4 @@
-local version, widget = 1, "BUTTON"
+local version, widget = 1, "TEXTBUTTON"
 local CUI = LibStub and LibStub("CloudUI-1.0")
 if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
 
@@ -19,13 +19,16 @@ end
 
 -- Automatically sizes the button to the current text.
 local function AutoSize(self)
-    local textWidth, textHeight = self:GetFontString():GetSize()
-    local buttonWidth, buttonHeight = self:GetSize()
-    if buttonHeight < textHeight then
-        self:SetHeight(textHeight > 20 and textHeight + 2 or 20) -- Minimum 20 in height.
-    end
-    if buttonWidth < textWidth then
-        self:SetWidth(textWidth + 2)
+    local fontString = self:GetFontString()
+    if fontString then
+        local textWidth, textHeight = fontString:GetSize()
+        local buttonWidth, buttonHeight = self:GetSize()
+        if buttonHeight < textHeight then
+            self:SetHeight(textHeight > 20 and textHeight + 2 or 20) -- Minimum 20 in height.
+        end
+        if buttonWidth < textWidth then
+            self:SetWidth(textWidth + 2)
+        end
     end
 end
 
@@ -56,9 +59,9 @@ end
 -- Creates a new button with the given name within the given parent frame and returns it (or false if the button couldn't be created).
 -- Callbacks, text, and color code are optional. Callbacks will be called whenever the user clicks the button.
 -- If set to true, the button will automatically resize every time the text changes.
-function CUI:CreateButton(parentFrame, frameName, callbacks, text)
+function CUI:CreateTextButton(parentFrame, frameName, callbacks, text)
     if callbacks then
-        assert(type(callbacks) == "table" and #callbacks > 0, "CreateButton: 'callbacks' needs to be a non-empty table")
+        assert(type(callbacks) == "table" and #callbacks > 0, "CreateTextButton: 'callbacks' needs to be a non-empty table")
     end
     local button = CreateFrame("Button", frameName, parentFrame or UIParent)
     button.callbacks = callbacks or {}
@@ -72,7 +75,7 @@ function CUI:CreateButton(parentFrame, frameName, callbacks, text)
     button:SetFontString(fontString)
     button:SetSize(100, 20) -- Default size.
     if text then
-        assert(type(text) == "string", "CreateButton: 'text' needs to be a string")
+        assert(type(text) == "string", "CreateTextButton: 'text' needs to be a string")
         button:SetText(text)
     end
     button.AutoSize = AutoSize

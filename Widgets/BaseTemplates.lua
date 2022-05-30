@@ -1,4 +1,4 @@
-local version, widget = 1, "BASE_TEMPLATES"
+local version, widget = 1, "BASETEMPLATES"
 local CUI = LibStub and LibStub("CloudUI-1.0")
 if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
 
