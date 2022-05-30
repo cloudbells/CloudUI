@@ -2,11 +2,9 @@
 local MAJOR = "CloudUI-1.0"
 local MINOR = "1"
 
-print("CloudUI ADDON attempting to load")
 assert(LibStub, MAJOR .. " requires LibStub")
 local CUI = LibStub:NewLibrary(MAJOR, MINOR)
 if not CUI then return end -- Newer or same version already exists.
-print("CloudUI ADDON loaded")
 
 -- Variables.
 local widgetVersions = {}
@@ -37,7 +35,6 @@ end
 -- Registers the given version for the given widget type.
 function CUI:RegisterWidgetVersion(type, version)
     widgetVersions[type] = version
-    print("ADDON REGISTERED: " .. type .. ", VERSION: " .. version)
 end
 
 Init()
