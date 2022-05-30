@@ -1,7 +1,8 @@
-local _, ns = ...
+local version, widget = 1, "BASE_TEMPLATES"
+local CUI = LibStub and LibStub("CloudUI-1.0")
+if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
 
 -- Variables.
-local CUI = ns.CUI
 local fontSmall, fontNormal, fontBig, fontHuge
 
 -- Script handlers.
@@ -110,16 +111,16 @@ end
 
 -- Applies the given template to the given frame. Returns true if successful, false otherwise.
 function CUI:ApplyTemplate(frame, template)
-    assert(ns.templates[template], "ApplyTemplate: 'template' needs to be a valid template e.g. CUI.templates.BackgroundFrameTemplate")
+    assert(CUI.templates[template], "ApplyTemplate: 'template' needs to be a valid template e.g. CUI.templates.BackgroundFrameTemplate")
     local frameName = frame:GetName()
-    if template == ns.templates.DisableableFrameTemplate then
+    if template == CUI.templates.DisableableFrameTemplate then
         if frame.disableableFrameTemplate then return false end -- We've already applied this template.
         if not frame:HookScript("OnDisable", DisableableFrame_OnDisable) then return false end -- HookScript() returns false if the hook was unsuccessful.
         if not frame:HookScript("OnEnable", DisableableFrame_OnEnable) then return false end
         frame.isDisabled = frame.IsEnabled and not frame:IsEnabled() or false -- Frame should be disableable regardless of if it's already enableable (buttons etc).
         frame.IsDisabled = IsDisabled
         frame.disableableFrameTemplate = true
-    elseif template == ns.templates.BackgroundFrameTemplate then
+    elseif template == CUI.templates.BackgroundFrameTemplate then
         if frame.backgroundFrameTemplate then return false end
         local CUIBackgroundTexture = frame:CreateTexture(frameName and frameName .. "CUIBackgroundTexture" or nil, "BACKGROUND")
         CUIBackgroundTexture:SetColorTexture(0, 0, 0, 1)
@@ -128,7 +129,7 @@ function CUI:ApplyTemplate(frame, template)
         frame.SetBackgroundColor = SetBackgroundColor
         frame.ResetBackgroundColor = ResetBackgroundColor
         frame.backgroundFrameTemplate = true
-    elseif template == ns.templates.BorderedFrameTemplate then
+    elseif template == CUI.templates.BorderedFrameTemplate then
         if frame.borderedFrameTemplate then return false end
         local CUITopBorderTexture = frame:CreateTexture(frameName and frameName .. "CUITopBorderTexture" or nil, "BORDER")
         CUITopBorderTexture:SetColorTexture(1, 1, 1, 1)
@@ -153,7 +154,7 @@ function CUI:ApplyTemplate(frame, template)
         frame.SetBorderColor = SetBorderColor
         frame.ResetBorderColor = ResetBorderColor
         frame.borderedFrameTemplate = true
-    elseif template == ns.templates.HighlightFrameTemplate then
+    elseif template == CUI.templates.HighlightFrameTemplate then
         if frame.highlightFrameTemplate then return false end
         local CUIHighlightTexture = frame:CreateTexture(frameName and frameName .. "CUIHighlightTexture" or nil, "HIGHLIGHT")
         CUIHighlightTexture:SetColorTexture(1, 1, 1, 0.3)
@@ -165,7 +166,7 @@ function CUI:ApplyTemplate(frame, template)
         if not frame:HookScript("OnEnter", HighlightFrame_OnEnter) then return false end
         if not frame:HookScript("OnLeave", HighlightFrame_OnLeave) then return false end
         frame.highlightFrameTemplate = true
-    elseif template == ns.templates.PushableFrameTemplate then
+    elseif template == CUI.templates.PushableFrameTemplate then
         if frame.pushableFrameTemplate then return false end
         local CUIPushTexture = frame:CreateTexture(frameName and frameName .. "CUIPushTexture" or nil, "HIGHLIGHT")
         CUIPushTexture:SetColorTexture(1, 1, 1, 0.6)
@@ -217,3 +218,5 @@ function CUI:GetFontHuge()
 end
 
 InitFonts()
+
+CUI:RegisterWidgetVersion(widget, version)

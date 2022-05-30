@@ -1,7 +1,8 @@
-local _, ns = ...
+local version, widget = 1, "EDITBOX"
+local CUI = LibStub and LibStub("CloudUI-1.0")
+if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
 
 -- Variables.
-local CUI = ns.CUI
 local tabGroups = {}
 
 -- Script handlers.
@@ -165,12 +166,12 @@ function CUI:CreateEditBox(parentFrame, frameName, callbacks, tabGroup, tabIndex
         end
     end
     local editBox = CreateFrame("EditBox", frameName, parentFrame or UIParent) -- If parentFrame is nil, the size will be fucked.
-    CUI:ApplyTemplate(editBox, ns.templates.BorderedFrameTemplate)
-    CUI:ApplyTemplate(editBox, ns.templates.HighlightFrameTemplate)
-    CUI:ApplyTemplate(editBox, ns.templates.BackgroundFrameTemplate)
-    CUI:ApplyTemplate(editBox, ns.templates.DisableableFrameTemplate)
+    if not CUI:ApplyTemplate(editBox, CUI.templates.BorderedFrameTemplate) then return false end
+    if not CUI:ApplyTemplate(editBox, CUI.templates.HighlightFrameTemplate) then return false end
+    if not CUI:ApplyTemplate(editBox, CUI.templates.BackgroundFrameTemplate) then return false end
+    if not CUI:ApplyTemplate(editBox, CUI.templates.DisableableFrameTemplate) then return false end
     editBox:SetAutoFocus(false)
-    editBox:SetHeight(20)
+    editBox:SetSize(200, 20)
     editBox:SetFontObject(self:GetFontBig())
     editBox:SetTextInsets(2, 0, 0, 0)
     editBox.callbacks = callbacks or {}
@@ -190,38 +191,16 @@ function CUI:CreateEditBox(parentFrame, frameName, callbacks, tabGroup, tabIndex
     editBox.RegisterCallback = RegisterCallback
     editBox.UnregisterCallback = UnregisterCallback
     editBox.SetTabIndex = SetTabIndex
-    if tabGroup then -- User will have to manually assign their own tab index later if not provided here.
-        editBox:SetTabIndex(tabIndex, tabGroup) -- Will assign an index equal to the current max index in the tab group + 1 if tabIndex is nil.
-    end
     if not editBox:HookScript("OnEnterPressed", EditBox_OnEnterPressed) then return false end
     if not editBox:HookScript("OnEscapePressed", EditBox_OnEscapePressed) then return false end
     if not editBox:HookScript("OnTabPressed", EditBox_OnTabPressed) then return false end
     if not editBox:HookScript("OnEditFocusGained", EditBox_OnEditFocusGained) then return false end
     if not editBox:HookScript("OnDisable", EditBox_OnDisable) then return false end
     if not editBox:HookScript("OnEnable", EditBox_OnEnable) then return false end
+    if tabGroup then -- User will have to manually assign their own tab index later if not provided here.
+        editBox:SetTabIndex(tabIndex, tabGroup) -- Will assign an index equal to the current max index in the tab group + 1 if tabIndex is nil.
+    end
     return editBox
 end
 
-
-
-
--- temp, remove testboxes
-local editBox = CUI:CreateEditBox(UIParent, "name1", {function(self, text) print(text) end}, "tabGroup1")
-editBox:SetWidth(200)
-editBox:Show()
-editBox:SetPoint("CENTER")
-
-local editBox2 = CUI:CreateEditBox(UIParent, "name2", {function(self, text) print(text) end}, "tabGroup1")
-editBox2:SetWidth(200)
-editBox2:Show()
-editBox2:SetPoint("CENTER", 0, -40)
-
-local editBox3 = CUI:CreateEditBox(UIParent, "name3", {function(self, text) print(text) end}, "tabGroup1")
-editBox3:SetWidth(200)
-editBox3:Show()
-editBox3:SetPoint("CENTER", 0, -80)
-
-local editBox4 = CUI:CreateEditBox(UIParent, "name4", {function(self, text) print(text) end}, "tabGroup1")
-editBox4:SetWidth(200)
-editBox4:Show()
-editBox4:SetPoint("CENTER", 0, -120)
+CUI:RegisterWidgetVersion(widget, version)
