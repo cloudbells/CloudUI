@@ -6,7 +6,6 @@ if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
 
 -- Called when the user clicks the given button.
 local function Button_OnClick(self, button)
-    PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
     local callbacks = self.callbacks
     if callbacks and #callbacks > 0 then
         for i = 1, #callbacks do
@@ -69,7 +68,7 @@ function CUI:CreateTextButton(parentFrame, frameName, callbacks, text)
     if not CUI:ApplyTemplate(button, CUI.templates.HighlightFrameTemplate) then return false end
     if not CUI:ApplyTemplate(button, CUI.templates.PushableFrameTemplate) then return false end
     if not CUI:ApplyTemplate(button, CUI.templates.BackgroundFrameTemplate) then return false end
-    local fontString = button:CreateFontString(nil, "ARTWORK", CUI:GetFontBig():GetName())
+    local fontString = button:CreateFontString(nil, "OVERLAY", CUI:GetFontBig():GetName())
     fontString:SetJustifyH("LEFT")
     fontString:SetPoint("LEFT", 2, 0)
     button:SetFontString(fontString)

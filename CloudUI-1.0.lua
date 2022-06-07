@@ -34,7 +34,6 @@ end
 
 -- Registers the given version for the given widget type.
 function CUI:RegisterWidgetVersion(type, version)
-    print(type, version)
     widgetVersions[type] = version
 end
 

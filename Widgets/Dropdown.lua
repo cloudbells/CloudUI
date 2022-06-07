@@ -35,10 +35,10 @@ end
 
 -- Called when the given dropdown button is clicked.
 local function DropdownButton_OnClick(self)
+    PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
     local dropdown = self:GetParent()
     dropdown:Hide()
     dropdown:GetParent():SetSelectedValue(self:GetText(), self.value)
-    PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
 end
 
 -- Returns (or creates if there is none available) a dropdown button from the pool.
@@ -297,12 +297,13 @@ function CUI:CreateDropdown(parentFrame, frameName, callbacks, values, texts)
     assert(texts and type(texts) == "table" and #texts > 0, "CreateDropdown: 'texts' needs to be a non-empty table")
     -- Create the actual dropdown parent button (which opens/closes the dropdown itself).
     local dropdownParent = CreateFrame("Button", frameName, parentFrame or UIParent) -- If parentFrame is nil, the size will be fucked.
+    dropdownParent:RegisterForClicks("AnyUp")
     if not CUI:ApplyTemplate(dropdownParent, CUI.templates.BorderedFrameTemplate) then return false end
     if not CUI:ApplyTemplate(dropdownParent, CUI.templates.HighlightFrameTemplate) then return false end
     if not CUI:ApplyTemplate(dropdownParent, CUI.templates.BackgroundFrameTemplate) then return false end
     if not CUI:ApplyTemplate(dropdownParent, CUI.templates.PushableFrameTemplate) then return false end
     dropdownParent:SetHeight(20) -- Just a default height which is obviously editable by the user.
-    local fontString = dropdownParent:CreateFontString(nil, "ARTWORK", CUI:GetFontBig():GetName()) -- Can be retrieved and changed via :GetFontString()
+    local fontString = dropdownParent:CreateFontString(nil, "OVERLAY", CUI:GetFontBig():GetName()) -- Can be retrieved and changed via :GetFontString()
     fontString:SetJustifyH("LEFT")
     fontString:SetPoint("LEFT", 2, 0)
     dropdownParent:SetFontString(fontString)
@@ -324,8 +325,9 @@ function CUI:CreateDropdown(parentFrame, frameName, callbacks, values, texts)
     dropdownParent.SetSelectedValue = SetSelectedValue
     dropdownParent.GetSelectedValue = GetSelectedValue
     if not dropdown then
-        dropdown = WDBDropdown or CreateFrame("Frame", "WDBDropdown", UIParent) -- The actual dropdown is the collapsible frame (i.e. the child of the dropdown button).
+        dropdown = CUIDropdown or CreateFrame("Frame", "CUIDropdown", UIParent) -- The actual dropdown is the collapsible frame (i.e. the child of the dropdown button).
         dropdown:Hide()
+        dropdown:SetToplevel(true)
         if not CUI:ApplyTemplate(dropdown, CUI.templates.BorderedFrameTemplate) then return false end
         dropdown.AttachTo = AttachTo
         dropdown.IsAttachedTo = IsAttachedTo
@@ -342,11 +344,16 @@ function CUI:CreateDropdown(parentFrame, frameName, callbacks, values, texts)
         dropdownButtons[1]:SetPoint("TOPLEFT")
         dropdownButtons[1]:SetPoint("BOTTOMRIGHT", dropdown, "TOPRIGHT", 0, -dropdownParent:GetHeight())
         AdjustDropdownButtons(dropdownParent)
+        CUI.GetDropdown = function(self)
+            return dropdown
+        end
     end
     if not dropdownParent:HookScript("OnHide", DropdownParent_OnHide) then return false end
     if not dropdownParent:HookScript("OnClick", DropdownParent_OnClick) then return false end
     dropdownParent.selectedValue = dropdownParent.values[1]
+    dropdownParent.initialValue = dropdownParent.values[1]
     dropdownParent:SetText(dropdownParent.texts[1])
+    dropdownParent.initialText = dropdownParent.texts[1]
     return dropdownParent
 end
 

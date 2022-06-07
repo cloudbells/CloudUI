@@ -61,7 +61,6 @@ end
 local function UpButton_OnClick(self)
     local slider = self:GetParent()
     slider:SetValue(slider:GetValue() - slider:GetValueStep())
-    print(slider:GetValue())
 end
 
 -- Called when the down button is clicked.
@@ -160,6 +159,7 @@ function CUI:CreateSlider(parentFrame, frameName, minValue, maxValue, obeyStep, 
     if not upButton:HookScript("OnDisable", Button_OnDisable) then return end
     if not upButton:HookScript("OnEnable", Button_OnEnable) then return end
     if not upButton:HookScript("OnClick", UpButton_OnClick) then return end
+    upButton:Disable()
     slider.upButton = upButton
     -- Down button.
     local downButton = CreateFrame("Button", frameName and frameName .. "CUIDownButton", slider)
