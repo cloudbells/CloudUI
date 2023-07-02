@@ -73,7 +73,7 @@ end
 
 -- Resets the given frame's background texture color.
 local function ResetBackgroundColor(self)
-    self:SetColorTexture(0, 0, 0, 1)
+    self.CUIBackgroundTexture:SetColorTexture(0, 0, 0, 1)
 end
 
 -- Sets the colors of the given frame's border textures to the given values.

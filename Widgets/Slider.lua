@@ -7,6 +7,15 @@ if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
 
 -- Script handlers.
 
+-- Called when the slider's size changes.
+local function Slider_OnSizeChanged(self, width, height)
+    if self.isHorizontal then
+        self:GetThumbTexture():SetSize(height - 2, height - 2)
+    else
+        self:GetThumbTexture():SetSize(width - 2, width - 2)
+    end
+end
+
 -- Called when the slider is disabled.
 local function Slider_OnDisable(self)
     self:GetThumbTexture():SetColorTexture(self.disableR, self.disableG, self.disableB, self.disableA)
@@ -22,14 +31,26 @@ local function Slider_OnValueChanged(self, value)
     -- Disable/enable buttons.
     local _, maxValue = self:GetMinMaxValues()
     if value <= self:GetMinMaxValues() then
-        self.upButton:Disable()
-        self.downButton:Enable()
+        if self.upButton then
+            self.upButton:Disable()
+        end
+        if self.downButton then
+            self.downButton:Enable()
+        end
     elseif value >= maxValue then
-        self.downButton:Disable()
-        self.upButton:Enable()
+        if self.upButton then
+            self.upButton:Enable()
+        end
+        if self.downButton then
+            self.downButton:Disable()
+        end
     else
-        self.upButton:Enable()
-        self.downButton:Enable()
+        if self.upButton then
+            self.upButton:Enable()
+        end
+        if self.downButton then
+            self.downButton:Enable()
+        end
     end
 end
 
@@ -61,12 +82,14 @@ end
 local function UpButton_OnClick(self)
     local slider = self:GetParent()
     slider:SetValue(slider:GetValue() - slider:GetValueStep())
+    PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
 end
 
 -- Called when the down button is clicked.
 local function DownButton_OnClick(self)
     local slider = self:GetParent()
     slider:SetValue(slider:GetValue() + slider:GetValueStep())
+    PlaySound(SOUNDKIT.U_CHAT_SCROLL_BUTTON)
 end
 
 -- Template functions.
@@ -97,16 +120,17 @@ local function ResetDisableColor(self)
     self.disableR, self.disableG, self.disableB, self.disableA = 0.3, 0.3, 0.3, 1
 end
 
--- temp, add comment
+-- Creates a slider and returns it.
 function CUI:CreateSlider(parentFrame, frameName, minValue, maxValue, obeyStep, thumbTexture, upTexture, downTexture, isHorizontal)
-    assert(thumbTexture and type(thumbTexture) == "string", "CreateSlide: 'thumbTexture' needs to be a string")
-    assert(upTexture and type(upTexture) == "string", "CreateSlide: 'upTexture' needs to be a string")
-    assert(downTexture and type(downTexture) == "string", "CreateSlide: 'downTexture' needs to be a string")
+    assert(thumbTexture and type(thumbTexture) == "string", "CreateSlider: 'thumbTexture' needs to be a string")
+    assert(type(upTexture) == "string" or type(upTexture) == "nil", "CreateSlider: 'upTexture' needs to be a string or nil")
+    assert(type(downTexture) == "string" or type(downTexture) == "nil", "CreateSlider: 'downTexture' needs to be a string or nil")
     -- Slider.
     local slider = CreateFrame("Slider", frameName, parentFrame or UIParent)
     if not CUI:ApplyTemplate(slider, CUI.templates.DisableableFrameTemplate) then return false end
     if not CUI:ApplyTemplate(slider, CUI.templates.BackgroundFrameTemplate) then return false end
     if not CUI:ApplyTemplate(slider, CUI.templates.BorderedFrameTemplate) then return false end
+    slider.isHorizontal = isHorizontal
     if isHorizontal then
         slider:SetOrientation("HORIZONTAL")
         slider:SetSize(168, 16)
@@ -129,7 +153,8 @@ function CUI:CreateSlider(parentFrame, frameName, minValue, maxValue, obeyStep, 
     slider:SetValue(minValue)
     slider:SetValueStep(1)
     slider:SetThumbTexture(thumbTexture)
-    slider:GetThumbTexture():SetSize(16, 16)
+    local size = isHorizontal and slider:GetHeight() - 2 or slider:GetWidth() - 2
+    slider:GetThumbTexture():SetSize(size, size)
     slider.disableR = 0.3
     slider.disableG = 0.3
     slider.disableB = 0.3
@@ -142,40 +167,45 @@ function CUI:CreateSlider(parentFrame, frameName, minValue, maxValue, obeyStep, 
     slider.ResetNormalColor = ResetNormalColor
     slider.SetDisableColor = SetDisableColor
     slider.ResetDisableColor = ResetDisableColor
+    if not slider:HookScript("OnSizeChanged", Slider_OnSizeChanged) then return end
     if not slider:HookScript("OnDisable", Slider_OnDisable) then return end
     if not slider:HookScript("OnEnable", Slider_OnEnable) then return end
     if not slider:HookScript("OnValueChanged", Slider_OnValueChanged) then return end
     -- Up button.
-    local upButton = CreateFrame("Button", frameName and frameName .. "CUIUpButton", slider)
-    if not CUI:ApplyTemplate(upButton, CUI.templates.HighlightFrameTemplate) then return end
-    if not CUI:ApplyTemplate(upButton, CUI.templates.BorderedFrameTemplate) then return end
-    if not CUI:ApplyTemplate(upButton, CUI.templates.PushableFrameTemplate) then return end
-    upButton:SetSize(16, 16)
-    local texture = upButton:CreateTexture(nil, "BACKGROUND")
-    texture:SetTexture(upTexture)
-    texture:SetAllPoints(upButton)
-    upButton.texture = texture
-    upButton:SetPoint("BOTTOM", slider, "TOP", 0, 2)
-    if not upButton:HookScript("OnDisable", Button_OnDisable) then return end
-    if not upButton:HookScript("OnEnable", Button_OnEnable) then return end
-    if not upButton:HookScript("OnClick", UpButton_OnClick) then return end
-    upButton:Disable()
-    slider.upButton = upButton
+    if upTexture then
+        local upButton = CreateFrame("Button", frameName and frameName .. "CUIUpButton", slider)
+        if not CUI:ApplyTemplate(upButton, CUI.templates.HighlightFrameTemplate) then return end
+        if not CUI:ApplyTemplate(upButton, CUI.templates.BorderedFrameTemplate) then return end
+        if not CUI:ApplyTemplate(upButton, CUI.templates.PushableFrameTemplate) then return end
+        upButton:SetSize(16, 16)
+        local texture = upButton:CreateTexture(nil, "BACKGROUND")
+        texture:SetTexture(upTexture)
+        texture:SetAllPoints(upButton)
+        upButton.texture = texture
+        upButton:SetPoint("BOTTOM", slider, "TOP", 0, 2)
+        if not upButton:HookScript("OnDisable", Button_OnDisable) then return end
+        if not upButton:HookScript("OnEnable", Button_OnEnable) then return end
+        if not upButton:HookScript("OnClick", UpButton_OnClick) then return end
+        upButton:Disable()
+        slider.upButton = upButton
+    end
     -- Down button.
-    local downButton = CreateFrame("Button", frameName and frameName .. "CUIDownButton", slider)
-    if not CUI:ApplyTemplate(downButton, CUI.templates.HighlightFrameTemplate) then return end
-    if not CUI:ApplyTemplate(downButton, CUI.templates.BorderedFrameTemplate) then return end
-    if not CUI:ApplyTemplate(downButton, CUI.templates.PushableFrameTemplate) then return end
-    downButton:SetSize(16, 16)
-    texture = downButton:CreateTexture(nil, "BACKGROUND")
-    texture:SetTexture(downTexture)
-    texture:SetAllPoints(downButton)
-    downButton.texture = texture
-    downButton:SetPoint("TOP", slider, "BOTTOM", 0, -2)
-    if not downButton:HookScript("OnDisable", Button_OnDisable) then return end
-    if not downButton:HookScript("OnEnable", Button_OnEnable) then return end
-    if not downButton:HookScript("OnClick", DownButton_OnClick) then return end
-    slider.downButton = downButton
+    if downTexture then
+        local downButton = CreateFrame("Button", frameName and frameName .. "CUIDownButton", slider)
+        if not CUI:ApplyTemplate(downButton, CUI.templates.HighlightFrameTemplate) then return end
+        if not CUI:ApplyTemplate(downButton, CUI.templates.BorderedFrameTemplate) then return end
+        if not CUI:ApplyTemplate(downButton, CUI.templates.PushableFrameTemplate) then return end
+        downButton:SetSize(16, 16)
+        texture = downButton:CreateTexture(nil, "BACKGROUND")
+        texture:SetTexture(downTexture)
+        texture:SetAllPoints(downButton)
+        downButton.texture = texture
+        downButton:SetPoint("TOP", slider, "BOTTOM", 0, -2)
+        if not downButton:HookScript("OnDisable", Button_OnDisable) then return end
+        if not downButton:HookScript("OnEnable", Button_OnEnable) then return end
+        if not downButton:HookScript("OnClick", DownButton_OnClick) then return end
+        slider.downButton = downButton
+    end
     return slider
 end
 

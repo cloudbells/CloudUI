@@ -4,6 +4,7 @@
     <Script file="Widgets/BaseTemplates.lua" />
     <Script file="Widgets/TextButton.lua" />
     <Script file="Widgets/LinkButton.lua" />
+    <Script file="Widgets/CheckButton.lua" />
     <Script file="Widgets/EditBox.lua" />
     <Script file="Widgets/Dropdown.lua" />
     <Script file="Widgets/Slider.lua" />

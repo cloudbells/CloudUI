@@ -54,7 +54,7 @@ local function GetDropdownButton(parent)
     if not CUI:ApplyTemplate(button, CUI.templates.HighlightFrameTemplate) then return false end
     if not CUI:ApplyTemplate(button, CUI.templates.BackgroundFrameTemplate) then return false end
     if not CUI:ApplyTemplate(button, CUI.templates.PushableFrameTemplate) then return false end
-    local fontString = button:CreateFontString(nil, "ARTWORK", CUI:GetFontBig():GetName())
+    local fontString = button:CreateFontString(nil, "ARTWORK", CUI:GetFontNormal():GetName())
     fontString:SetJustifyH("LEFT")
     fontString:SetPoint("LEFT", 2, 0)
     button:SetFontString(fontString)
@@ -111,13 +111,11 @@ end
 -- Called when the dropdown parent is clicked.
 local function DropdownParent_OnClick(self, button)
     if button == "LeftButton" then
-        if not dropdown:IsAttachedTo(self) then
-            AdjustDropdownButtons(self)
-            dropdown:AttachTo(self)
-            dropdown:Show()
-        elseif dropdown:IsVisible() then
+        if dropdown:IsVisible() then
             dropdown:Hide()
         else
+            AdjustDropdownButtons(self)
+            dropdown:AttachTo(self)
             dropdown:Show()
         end
     end
@@ -240,7 +238,7 @@ end
 -- Sets the selected value for the given frame as well as sets the text of the frame.
 local function SetSelectedValue(self, text, value)
     assert(text and type(text) == "string" or type(text) == "number", "SetSelectedValue: 'text' needs to be a number or a string")
-    assert(value, "SetSelectedValue: 'value' can't be nil")
+    assert(type(value) ~= nil, "SetSelectedValue: 'value' can't be nil")
     self.selectedValue = value
     self:SetText(text)
     if self.callbacks and #self.callbacks > 0 then
@@ -271,12 +269,10 @@ local function AttachTo(self, parent)
         newLeftOffset = screenWidth - leftOffset - width - 2
     end
     if bottomOffset <= 2 then -- Bottom.
-        newBottomOffset = -bottomOffset + height - 4
-    elseif bottomOffset + height >= screenHeight + 2 then -- Above (this should never be possible).
-        newBottomOffset = screenHeight - bottomOffset - height + 2
+        newBottomOffset = self:GetHeight() + parent:GetHeight() + 8
     end
-    self:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", 0 + newLeftOffset, -4 + newBottomOffset)
-    self:SetPoint("TOPRIGHT", parent, "BOTTOMRIGHT", 0 + newLeftOffset, -4 + newBottomOffset)
+    self:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", newLeftOffset, -4 + newBottomOffset)
+    self:SetPoint("TOPRIGHT", parent, "BOTTOMRIGHT", newLeftOffset, -4 + newBottomOffset)
     self.timeSinceLast = 0
 end
 
@@ -303,7 +299,7 @@ function CUI:CreateDropdown(parentFrame, frameName, callbacks, values, texts)
     if not CUI:ApplyTemplate(dropdownParent, CUI.templates.BackgroundFrameTemplate) then return false end
     if not CUI:ApplyTemplate(dropdownParent, CUI.templates.PushableFrameTemplate) then return false end
     dropdownParent:SetHeight(20) -- Just a default height which is obviously editable by the user.
-    local fontString = dropdownParent:CreateFontString(nil, "OVERLAY", CUI:GetFontBig():GetName()) -- Can be retrieved and changed via :GetFontString()
+    local fontString = dropdownParent:CreateFontString(nil, "OVERLAY", CUI:GetFontNormal():GetName()) -- Can be retrieved and changed via :GetFontString()
     fontString:SetJustifyH("LEFT")
     fontString:SetPoint("LEFT", 2, 0)
     dropdownParent:SetFontString(fontString)
