@@ -1,6 +1,8 @@
 local version, widget = 1, "LINKBUTTON"
 local CUI = LibStub and LibStub("CloudUI-1.0")
-if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
+if not CUI or CUI:GetWidgetVersion(widget) >= version then
+    return
+end
 
 -- Script handlers.
 
@@ -76,22 +78,29 @@ local function SetIcon(self, texture)
     self.icon:Show()
 end
 
--- temp, add comment
+-- Creates a link button in the given parent frame and with the given name, callbacks, and link. Returns false if creating failed.
 function CUI:CreateLinkButton(parentFrame, frameName, callbacks, link)
     if callbacks then
         assert(type(callbacks) == "table" and #callbacks > 0, "CreateLinkButton: 'callbacks' needs to be a non-empty table")
     end
     local button = CreateFrame("Button", frameName, parentFrame or UIParent)
     button.callbacks = callbacks or {}
-    if not CUI:ApplyTemplate(button, CUI.templates.BorderedFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(button, CUI.templates.HighlightFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(button, CUI.templates.PushableFrameTemplate) then return false end
+    if not CUI:ApplyTemplate(button, CUI.templates.BorderedFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(button, CUI.templates.HighlightFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(button, CUI.templates.PushableFrameTemplate) then
+        return false
+    end
     local icon = button:CreateTexture(frameName and frameName .. "CUILinkButtonIcon" or nil, "ARTWORK")
     icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
     icon:SetAllPoints()
     icon:Hide()
     button.icon = icon
-    button:SetSize(34, 34) -- Default size.
+    -- Default size.
+    button:SetSize(34, 34)
     button.SetCallbacks = SetCallbacks
     button.RegisterCallback = RegisterCallback
     button.UnregisterCallback = UnregisterCallback
@@ -102,9 +111,15 @@ function CUI:CreateLinkButton(parentFrame, frameName, callbacks, link)
         assert(type(link) == "string", "CreateLinkButton: 'link' needs to be a string")
         button:SetLink(link)
     end
-    if not button:HookScript("OnClick", Button_OnClick) then return false end
-    if not button:HookScript("OnEnter", Button_OnEnter) then return false end
-    if not button:HookScript("OnLeave", Button_OnLeave) then return false end
+    if not button:HookScript("OnClick", Button_OnClick) then
+        return false
+    end
+    if not button:HookScript("OnEnter", Button_OnEnter) then
+        return false
+    end
+    if not button:HookScript("OnLeave", Button_OnLeave) then
+        return false
+    end
     return button
 end
 

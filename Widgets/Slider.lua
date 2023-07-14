@@ -1,18 +1,35 @@
--- todo:
--- 1. when changing slider size, change thumb size to match
-
 local version, widget = 1, "SLIDER"
 local CUI = LibStub and LibStub("CloudUI-1.0")
-if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
+if not CUI or CUI:GetWidgetVersion(widget) >= version then
+    return
+end
+
+-- Variables.
+local THUMB_PADDING = 2
+local DEFAULT_SIZE = 16
+local DEFAULT_LENGTH = 168
 
 -- Script handlers.
 
 -- Called when the slider's size changes.
 local function Slider_OnSizeChanged(self, width, height)
     if self.isHorizontal then
-        self:GetThumbTexture():SetSize(height - 2, height - 2)
+        if self.upButton then
+            self.upButton:SetSize(height, height)
+        end
+        if self.downButton then
+            self.downButton:SetSize(height, height)
+        end
+        self:GetThumbTexture():SetSize(height, height)
     else
-        self:GetThumbTexture():SetSize(width - 2, width - 2)
+        if self.upButton then
+            self.upButton:SetSize(width, width)
+        end
+        if self.downButton then
+            self.downButton:SetSize(width, width)
+        end
+        -- I don't know why padding is needed here but not for horizontal sliders.
+        self:GetThumbTexture():SetSize(width - THUMB_PADDING, width - THUMB_PADDING)
     end
 end
 
@@ -120,40 +137,61 @@ local function ResetDisableColor(self)
     self.disableR, self.disableG, self.disableB, self.disableA = 0.3, 0.3, 0.3, 1
 end
 
--- Creates a slider and returns it.
+-- Creates and returns a slider in the given parent frame and with the given name, minValue, and maxValue. No default textures so they have to be given.
 function CUI:CreateSlider(parentFrame, frameName, minValue, maxValue, obeyStep, thumbTexture, upTexture, downTexture, isHorizontal)
     assert(thumbTexture and type(thumbTexture) == "string", "CreateSlider: 'thumbTexture' needs to be a string")
     assert(type(upTexture) == "string" or type(upTexture) == "nil", "CreateSlider: 'upTexture' needs to be a string or nil")
     assert(type(downTexture) == "string" or type(downTexture) == "nil", "CreateSlider: 'downTexture' needs to be a string or nil")
     -- Slider.
     local slider = CreateFrame("Slider", frameName, parentFrame or UIParent)
-    if not CUI:ApplyTemplate(slider, CUI.templates.DisableableFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(slider, CUI.templates.BackgroundFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(slider, CUI.templates.BorderedFrameTemplate) then return false end
+    if not CUI:ApplyTemplate(slider, CUI.templates.DisableableFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(slider, CUI.templates.BackgroundFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(slider, CUI.templates.BorderedFrameTemplate) then
+        return false
+    end
+    -- Manually set positions of background and borders if it's vertical because sliders are weird.
+    if not isHorizontal then
+        slider.CUITopBorderTexture:SetPoint("BOTTOMLEFT", slider, "TOPLEFT", -1, 1)
+        slider.CUITopBorderTexture:SetPoint("BOTTOMRIGHT", slider, "TOPRIGHT", 1, 1)
+        slider.CUIRightBorderTexture:SetPoint("BOTTOMLEFT", slider, "BOTTOMRIGHT", 0, -2)
+        slider.CUIRightBorderTexture:SetPoint("TOPLEFT", slider, "TOPRIGHT", 0, 2)
+        slider.CUIBottomBorderTexture:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", -1, -1)
+        slider.CUIBottomBorderTexture:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 1, -1)
+        slider.CUILeftBorderTexture:SetPoint("BOTTOMRIGHT", slider, "BOTTOMLEFT", 0, -2)
+        slider.CUILeftBorderTexture:SetPoint("TOPRIGHT", slider, "TOPLEFT", 0, 2)
+        slider.CUIBackgroundTexture:SetPoint("TOPLEFT", slider, "TOPLEFT", 0, 1)
+        slider.CUIBackgroundTexture:SetPoint("BOTTOMRIGHT", slider, "BOTTOMRIGHT", 0, -1)
+    end
     slider.isHorizontal = isHorizontal
     if isHorizontal then
         slider:SetOrientation("HORIZONTAL")
-        slider:SetSize(168, 16)
+        slider:SetSize(DEFAULT_LENGTH, DEFAULT_SIZE)
     else
         slider:SetOrientation("VERTICAL")
-        slider:SetSize(16, 168)
+        slider:SetSize(DEFAULT_SIZE, DEFAULT_LENGTH)
     end
     if minValue then
         assert(type(minValue) == "number", "CreateSlider: 'minValue' needs to be a number")
     else
-        minValue = 1 -- Default.
+        -- Default.
+        minValue = 1
     end
     if maxValue then
         assert(type(maxValue) == "number" and maxValue >= minValue, "CreateSlider: 'maxValue' needs to be a number >= 'minValue'")
     else
-        maxValue = 10 -- Default.
+        -- Default.
+        maxValue = 10
     end
     slider:SetObeyStepOnDrag(obeyStep)
     slider:SetMinMaxValues(minValue, maxValue)
     slider:SetValue(minValue)
     slider:SetValueStep(1)
     slider:SetThumbTexture(thumbTexture)
-    local size = isHorizontal and slider:GetHeight() - 2 or slider:GetWidth() - 2
+    local size = isHorizontal and slider:GetHeight() - THUMB_PADDING or slider:GetWidth() - THUMB_PADDING
     slider:GetThumbTexture():SetSize(size, size)
     slider.disableR = 0.3
     slider.disableG = 0.3
@@ -167,43 +205,83 @@ function CUI:CreateSlider(parentFrame, frameName, minValue, maxValue, obeyStep, 
     slider.ResetNormalColor = ResetNormalColor
     slider.SetDisableColor = SetDisableColor
     slider.ResetDisableColor = ResetDisableColor
-    if not slider:HookScript("OnSizeChanged", Slider_OnSizeChanged) then return end
-    if not slider:HookScript("OnDisable", Slider_OnDisable) then return end
-    if not slider:HookScript("OnEnable", Slider_OnEnable) then return end
-    if not slider:HookScript("OnValueChanged", Slider_OnValueChanged) then return end
+    if not slider:HookScript("OnSizeChanged", Slider_OnSizeChanged) then
+        return
+    end
+    if not slider:HookScript("OnDisable", Slider_OnDisable) then
+        return
+    end
+    if not slider:HookScript("OnEnable", Slider_OnEnable) then
+        return
+    end
+    if not slider:HookScript("OnValueChanged", Slider_OnValueChanged) then
+        return
+    end
     -- Up button.
     if upTexture then
         local upButton = CreateFrame("Button", frameName and frameName .. "CUIUpButton", slider)
-        if not CUI:ApplyTemplate(upButton, CUI.templates.HighlightFrameTemplate) then return end
-        if not CUI:ApplyTemplate(upButton, CUI.templates.BorderedFrameTemplate) then return end
-        if not CUI:ApplyTemplate(upButton, CUI.templates.PushableFrameTemplate) then return end
-        upButton:SetSize(16, 16)
+        if not CUI:ApplyTemplate(upButton, CUI.templates.HighlightFrameTemplate) then
+            return
+        end
+        if not CUI:ApplyTemplate(upButton, CUI.templates.BorderedFrameTemplate) then
+            return
+        end
+        if not CUI:ApplyTemplate(upButton, CUI.templates.PushableFrameTemplate) then
+            return
+        end
+        upButton:SetSize(DEFAULT_SIZE, DEFAULT_SIZE)
         local texture = upButton:CreateTexture(nil, "BACKGROUND")
         texture:SetTexture(upTexture)
         texture:SetAllPoints(upButton)
         upButton.texture = texture
-        upButton:SetPoint("BOTTOM", slider, "TOP", 0, 2)
-        if not upButton:HookScript("OnDisable", Button_OnDisable) then return end
-        if not upButton:HookScript("OnEnable", Button_OnEnable) then return end
-        if not upButton:HookScript("OnClick", UpButton_OnClick) then return end
+        if not isHorizontal then
+            upButton:SetPoint("BOTTOM", slider, "TOP", 0, 2)
+        else
+            upButton:SetPoint("BOTTOMRIGHT", slider, "BOTTOMLEFT", -1, 0)
+        end
+        if not upButton:HookScript("OnDisable", Button_OnDisable) then
+            return
+        end
+        if not upButton:HookScript("OnEnable", Button_OnEnable) then
+            return
+        end
+        if not upButton:HookScript("OnClick", UpButton_OnClick) then
+            return
+        end
         upButton:Disable()
         slider.upButton = upButton
     end
     -- Down button.
     if downTexture then
         local downButton = CreateFrame("Button", frameName and frameName .. "CUIDownButton", slider)
-        if not CUI:ApplyTemplate(downButton, CUI.templates.HighlightFrameTemplate) then return end
-        if not CUI:ApplyTemplate(downButton, CUI.templates.BorderedFrameTemplate) then return end
-        if not CUI:ApplyTemplate(downButton, CUI.templates.PushableFrameTemplate) then return end
-        downButton:SetSize(16, 16)
-        texture = downButton:CreateTexture(nil, "BACKGROUND")
+        if not CUI:ApplyTemplate(downButton, CUI.templates.HighlightFrameTemplate) then
+            return
+        end
+        if not CUI:ApplyTemplate(downButton, CUI.templates.BorderedFrameTemplate) then
+            return
+        end
+        if not CUI:ApplyTemplate(downButton, CUI.templates.PushableFrameTemplate) then
+            return
+        end
+        downButton:SetSize(DEFAULT_SIZE, DEFAULT_SIZE)
+        local texture = downButton:CreateTexture(nil, "BACKGROUND")
         texture:SetTexture(downTexture)
         texture:SetAllPoints(downButton)
         downButton.texture = texture
-        downButton:SetPoint("TOP", slider, "BOTTOM", 0, -2)
-        if not downButton:HookScript("OnDisable", Button_OnDisable) then return end
-        if not downButton:HookScript("OnEnable", Button_OnEnable) then return end
-        if not downButton:HookScript("OnClick", DownButton_OnClick) then return end
+        if not isHorizontal then
+            downButton:SetPoint("TOP", slider, "BOTTOM", 0, -2)
+        else
+            downButton:SetPoint("BOTTOMLEFT", slider, "BOTTOMRIGHT", 1, 0)
+        end
+        if not downButton:HookScript("OnDisable", Button_OnDisable) then
+            return
+        end
+        if not downButton:HookScript("OnEnable", Button_OnEnable) then
+            return
+        end
+        if not downButton:HookScript("OnClick", DownButton_OnClick) then
+            return
+        end
         slider.downButton = downButton
     end
     return slider

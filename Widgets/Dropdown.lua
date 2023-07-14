@@ -1,6 +1,8 @@
 local version, widget = 1, "DROPDOWN"
 local CUI = LibStub and LibStub("CloudUI-1.0")
-if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
+if not CUI or CUI:GetWidgetVersion(widget) >= version then
+    return
+end
 
 -- Variables.
 local dropdownButtons = {}
@@ -51,9 +53,15 @@ local function GetDropdownButton(parent)
     end
     -- No available button was found, so create a new one and add it to the pool.
     local button = CreateFrame("Button", "CUIDropdownButton" .. #framePool + 1, parent)
-    if not CUI:ApplyTemplate(button, CUI.templates.HighlightFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(button, CUI.templates.BackgroundFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(button, CUI.templates.PushableFrameTemplate) then return false end
+    if not CUI:ApplyTemplate(button, CUI.templates.HighlightFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(button, CUI.templates.BackgroundFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(button, CUI.templates.PushableFrameTemplate) then
+        return false
+    end
     local fontString = button:CreateFontString(nil, "ARTWORK", CUI:GetFontNormal():GetName())
     fontString:SetJustifyH("LEFT")
     fontString:SetPoint("LEFT", 2, 0)
@@ -73,10 +81,12 @@ end
 
 -- Adds or removes buttons as appropriate and sets the value for each button.
 local function AdjustDropdownButtons(dropdownParent)
-    local lastButtonIndex = #dropdownButtons -- The "index" of the last button. There will always be at least one button so we only need to attach buttons to the bottom button.
+    -- The "index" of the last button. There will always be at least one button so we only need to attach buttons to the bottom button.
+    local lastButtonIndex = #dropdownButtons
     local newValues = dropdownParent:GetValues()
     local newTexts = dropdownParent:GetTexts()
-    local delta = #newValues - lastButtonIndex -- Add buttons if > 0, otherwise remove buttons.
+    -- Add buttons if > 0, otherwise remove buttons.
+    local delta = #newValues - lastButtonIndex
     -- If delta is 0 we don't have to add or remove any buttons, only adjust values.
     if delta < 0 then
         for i = #newValues + 1, lastButtonIndex do
@@ -263,7 +273,8 @@ local function AttachTo(self, parent)
     local bottomOffset = parent:GetBottom() - self:GetHeight() - 4
     local leftOffset = parent:GetLeft()
     local screenWidth, screenHeight = UIParent:GetSize()
-    if leftOffset <= 2 then -- If the dropdown would end up being outside the screen on the left side.
+    -- If the dropdown would end up being outside the screen on the left side.
+    if leftOffset <= 2 then
         newLeftOffset = -leftOffset + 2
     elseif leftOffset + width >= screenWidth - 2 then -- Right side.
         newLeftOffset = screenWidth - leftOffset - width - 2
@@ -281,10 +292,9 @@ local function IsAttachedTo(self, parent)
     return parent == self:GetParent()
 end
 
--- Creates a dropdown with the given name in the given parent frame. If given, will register for the callbacks and call those functions whenever a value is selected in the dropdown.
--- A table of values is non-optional – button 1 will be given the value values[1] etc.
--- A table of texts is also non-optional and will be assigned same as above.
--- Returns the dropdown if it's successfully created, false otherwise.
+-- Creates a dropdown with the given name in the given parent frame. If given, will register for the callbacks and call those functions whenever a value is
+-- selected in the dropdown. A table of values is non-optional – button 1 will be given the value values[1] etc. A table of texts is also non-optional and will
+-- be assigned same as above. Returns the dropdown if it's successfully created, false otherwise.
 function CUI:CreateDropdown(parentFrame, frameName, callbacks, values, texts)
     if callbacks then
         assert(type(callbacks) == "table" and #callbacks > 0, "CreateDropdown: 'callbacks' needs to be a non-empty table")
@@ -292,14 +302,25 @@ function CUI:CreateDropdown(parentFrame, frameName, callbacks, values, texts)
     assert(values and type(values) == "table" and #values > 0, "CreateDropdown: 'values' needs to be a non-empty table")
     assert(texts and type(texts) == "table" and #texts > 0, "CreateDropdown: 'texts' needs to be a non-empty table")
     -- Create the actual dropdown parent button (which opens/closes the dropdown itself).
-    local dropdownParent = CreateFrame("Button", frameName, parentFrame or UIParent) -- If parentFrame is nil, the size will be fucked.
+    -- If parentFrame is nil, the size will be fucked.
+    local dropdownParent = CreateFrame("Button", frameName, parentFrame or UIParent)
     dropdownParent:RegisterForClicks("AnyUp")
-    if not CUI:ApplyTemplate(dropdownParent, CUI.templates.BorderedFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(dropdownParent, CUI.templates.HighlightFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(dropdownParent, CUI.templates.BackgroundFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(dropdownParent, CUI.templates.PushableFrameTemplate) then return false end
-    dropdownParent:SetHeight(20) -- Just a default height which is obviously editable by the user.
-    local fontString = dropdownParent:CreateFontString(nil, "OVERLAY", CUI:GetFontNormal():GetName()) -- Can be retrieved and changed via :GetFontString()
+    if not CUI:ApplyTemplate(dropdownParent, CUI.templates.BorderedFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(dropdownParent, CUI.templates.HighlightFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(dropdownParent, CUI.templates.BackgroundFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(dropdownParent, CUI.templates.PushableFrameTemplate) then
+        return false
+    end
+    -- Just a default height which is obviously editable by the user.
+    dropdownParent:SetHeight(20)
+    -- Can be retrieved and changed via :GetFontString()
+    local fontString = dropdownParent:CreateFontString(nil, "OVERLAY", CUI:GetFontNormal():GetName())
     fontString:SetJustifyH("LEFT")
     fontString:SetPoint("LEFT", 2, 0)
     dropdownParent:SetFontString(fontString)
@@ -321,10 +342,13 @@ function CUI:CreateDropdown(parentFrame, frameName, callbacks, values, texts)
     dropdownParent.SetSelectedValue = SetSelectedValue
     dropdownParent.GetSelectedValue = GetSelectedValue
     if not dropdown then
-        dropdown = CUIDropdown or CreateFrame("Frame", "CUIDropdown", UIParent) -- The actual dropdown is the collapsible frame (i.e. the child of the dropdown button).
+        -- The actual dropdown is the collapsible frame (i.e. the child of the dropdown button).
+        dropdown = CUIDropdown or CreateFrame("Frame", "CUIDropdown", UIParent)
         dropdown:Hide()
         dropdown:SetToplevel(true)
-        if not CUI:ApplyTemplate(dropdown, CUI.templates.BorderedFrameTemplate) then return false end
+        if not CUI:ApplyTemplate(dropdown, CUI.templates.BorderedFrameTemplate) then
+            return false
+        end
         dropdown.AttachTo = AttachTo
         dropdown.IsAttachedTo = IsAttachedTo
         local success = true
@@ -344,8 +368,12 @@ function CUI:CreateDropdown(parentFrame, frameName, callbacks, values, texts)
             return dropdown
         end
     end
-    if not dropdownParent:HookScript("OnHide", DropdownParent_OnHide) then return false end
-    if not dropdownParent:HookScript("OnClick", DropdownParent_OnClick) then return false end
+    if not dropdownParent:HookScript("OnHide", DropdownParent_OnHide) then
+        return false
+    end
+    if not dropdownParent:HookScript("OnClick", DropdownParent_OnClick) then
+        return false
+    end
     dropdownParent.selectedValue = dropdownParent.values[1]
     dropdownParent.initialValue = dropdownParent.values[1]
     dropdownParent:SetText(dropdownParent.texts[1])

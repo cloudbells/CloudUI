@@ -1,6 +1,8 @@
 local version, widget = 1, "CHECKBUTTON"
 local CUI = LibStub and LibStub("CloudUI-1.0")
-if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
+if not CUI or CUI:GetWidgetVersion(widget) >= version then
+    return
+end
 
 -- Called when the user clicks the check button.
 local function OnClick(self, button)
@@ -37,14 +39,6 @@ local function UnregisterCallback(self, callback)
     end
 end
 
-local function SetTexture(self, checkTexture)
-    local texture = checkButton:CreateTexture(nil, "ARTWORK")
-    texture:SetTexture(checkTexture)
-    texture:SetAllPoints()
-    checkButton.ToggleTexture = ToggleTexture
-    checkButton.checkTexture = texture
-end
-
 -- Toggles the texture for the check button on or off.
 local function ToggleTexture(self)
     if self.checked then
@@ -56,6 +50,14 @@ local function ToggleTexture(self)
     end
 end
 
+local function SetTexture(self, checkTexture)
+    local texture = self:CreateTexture(nil, "ARTWORK")
+    texture:SetTexture(checkTexture)
+    texture:SetAllPoints()
+    self.ToggleTexture = ToggleTexture
+    self.checkTexture = texture
+end
+
 -- Sets the check button check status to true or false.
 local function SetChecked(self, checked)
     self.checked = checked
@@ -64,29 +66,39 @@ local function SetChecked(self, checked)
     end
 end
 
+-- Creates and returns a CheckButton with the given parent frame, name, callbacks, and checkmark texture.
 function CUI:CreateCheckButton(parentFrame, frameName, callbacks, checkTexture)
     if callbacks then
         assert(type(callbacks) == "table" and #callbacks > 0, "CreateCheckButton: 'callbacks' needs to be a non-empty table")
     end
     local checkButton = CreateFrame("CheckButton", frameName, parentFrame or UIParent)
     checkButton.callbacks = callbacks or {}
-    if not CUI:ApplyTemplate(checkButton, CUI.templates.BorderedFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(checkButton, CUI.templates.HighlightFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(checkButton, CUI.templates.BackgroundFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(checkButton, CUI.templates.PushableFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(checkButton, CUI.templates.DisableableFrameTemplate) then return false end
+    if not CUI:ApplyTemplate(checkButton, CUI.templates.BorderedFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(checkButton, CUI.templates.HighlightFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(checkButton, CUI.templates.BackgroundFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(checkButton, CUI.templates.PushableFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(checkButton, CUI.templates.DisableableFrameTemplate) then
+        return false
+    end
     checkButton:SetSize(16, 16)
     checkButton.SetChecked = SetChecked
     checkButton.SetCallbacks = SetCallbacks
     checkButton.RegisterCallback = RegisterCallback
     checkButton.UnregisterCallback = UnregisterCallback
-    if not checkButton:HookScript("OnClick", OnClick) then return false end
+    checkButton.SetTexture = SetTexture
+    if not checkButton:HookScript("OnClick", OnClick) then
+        return false
+    end
     if checkTexture then
-        local texture = checkButton:CreateTexture(nil, "ARTWORK")
-        texture:SetTexture(checkTexture)
-        texture:SetAllPoints()
-        checkButton.ToggleTexture = ToggleTexture
-        checkButton.checkTexture = texture
+        checkButton:SetTexture(checkTexture)
     end
     return checkButton
 end

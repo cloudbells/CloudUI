@@ -1,6 +1,8 @@
 local version, widget = 1, "BASETEMPLATES"
 local CUI = LibStub and LibStub("CloudUI-1.0")
-if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
+if not CUI or CUI:GetWidgetVersion(widget) >= version then
+    return
+end
 
 -- Variables.
 local fontSmall, fontNormal, fontBig, fontHuge
@@ -114,14 +116,25 @@ function CUI:ApplyTemplate(frame, template)
     assert(CUI.templates[template], "ApplyTemplate: 'template' needs to be a valid template e.g. CUI.templates.BackgroundFrameTemplate")
     local frameName = frame:GetName()
     if template == CUI.templates.DisableableFrameTemplate then
-        if frame.disableableFrameTemplate then return false end -- We've already applied this template.
-        if not frame:HookScript("OnDisable", DisableableFrame_OnDisable) then return false end -- HookScript() returns false if the hook was unsuccessful.
-        if not frame:HookScript("OnEnable", DisableableFrame_OnEnable) then return false end
-        frame.isDisabled = frame.IsEnabled and not frame:IsEnabled() or false -- Frame should be disableable regardless of if it's already enableable (buttons etc).
+        if frame.disableableFrameTemplate then
+            -- We've already applied this template.
+            return false
+        end
+        if not frame:HookScript("OnDisable", DisableableFrame_OnDisable) then
+            -- HookScript() returns false if the hook was unsuccessful.
+            return false
+        end
+        if not frame:HookScript("OnEnable", DisableableFrame_OnEnable) then
+            return false
+        end
+        -- Frame should be disableable regardless of if it's already enableable (buttons etc).
+        frame.isDisabled = frame.IsEnabled and not frame:IsEnabled() or false
         frame.IsDisabled = IsDisabled
         frame.disableableFrameTemplate = true
     elseif template == CUI.templates.BackgroundFrameTemplate then
-        if frame.backgroundFrameTemplate then return false end
+        if frame.backgroundFrameTemplate then
+            return false
+        end
         local CUIBackgroundTexture = frame:CreateTexture(frameName and frameName .. "CUIBackgroundTexture" or nil, "BACKGROUND")
         CUIBackgroundTexture:SetColorTexture(0, 0, 0, 1)
         CUIBackgroundTexture:SetAllPoints(frame)
@@ -130,7 +143,9 @@ function CUI:ApplyTemplate(frame, template)
         frame.ResetBackgroundColor = ResetBackgroundColor
         frame.backgroundFrameTemplate = true
     elseif template == CUI.templates.BorderedFrameTemplate then
-        if frame.borderedFrameTemplate then return false end
+        if frame.borderedFrameTemplate then
+            return false
+        end
         local CUITopBorderTexture = frame:CreateTexture(frameName and frameName .. "CUITopBorderTexture" or nil, "BORDER")
         CUITopBorderTexture:SetColorTexture(1, 1, 1, 1)
         CUITopBorderTexture:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", -1, 0)
@@ -155,7 +170,9 @@ function CUI:ApplyTemplate(frame, template)
         frame.ResetBorderColor = ResetBorderColor
         frame.borderedFrameTemplate = true
     elseif template == CUI.templates.HighlightFrameTemplate then
-        if frame.highlightFrameTemplate then return false end
+        if frame.highlightFrameTemplate then
+            return false
+        end
         local CUIHighlightTexture = frame:CreateTexture(frameName and frameName .. "CUIHighlightTexture" or nil, "HIGHLIGHT")
         CUIHighlightTexture:SetColorTexture(1, 1, 1, 0.3)
         CUIHighlightTexture:SetAllPoints(frame)
@@ -163,11 +180,17 @@ function CUI:ApplyTemplate(frame, template)
         frame.CUIHighlightTexture = CUIHighlightTexture
         frame.SetHighlightColor = SetHighlightColor
         frame.ResetHighlightColor = ResetHighlightColor
-        if not frame:HookScript("OnEnter", HighlightFrame_OnEnter) then return false end
-        if not frame:HookScript("OnLeave", HighlightFrame_OnLeave) then return false end
+        if not frame:HookScript("OnEnter", HighlightFrame_OnEnter) then
+            return false
+        end
+        if not frame:HookScript("OnLeave", HighlightFrame_OnLeave) then
+            return false
+        end
         frame.highlightFrameTemplate = true
     elseif template == CUI.templates.PushableFrameTemplate then
-        if frame.pushableFrameTemplate then return false end
+        if frame.pushableFrameTemplate then
+            return false
+        end
         local CUIPushTexture = frame:CreateTexture(frameName and frameName .. "CUIPushTexture" or nil, "HIGHLIGHT")
         CUIPushTexture:SetColorTexture(1, 1, 1, 0.6)
         CUIPushTexture:SetAllPoints(frame)
@@ -175,8 +198,12 @@ function CUI:ApplyTemplate(frame, template)
         frame.CUIPushTexture = CUIPushTexture
         frame.SetPushColor = SetPushColor
         frame.ResetPushColor = ResetPushColor
-        if not frame:HookScript("OnMouseDown", PushableFrame_OnMouseDown) then return false end
-        if not frame:HookScript("OnMouseUp", PushableFrame_OnMouseUp) then return false end
+        if not frame:HookScript("OnMouseDown", PushableFrame_OnMouseDown) then
+            return false
+        end
+        if not frame:HookScript("OnMouseUp", PushableFrame_OnMouseUp) then
+            return false
+        end
         frame.pushableFrameTemplate = true
     end
     return true

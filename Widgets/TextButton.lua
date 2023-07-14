@@ -1,6 +1,8 @@
 local version, widget = 1, "TEXTBUTTON"
 local CUI = LibStub and LibStub("CloudUI-1.0")
-if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
+if not CUI or CUI:GetWidgetVersion(widget) >= version then
+    return
+end
 
 -- Script handlers.
 
@@ -23,7 +25,8 @@ local function AutoSize(self)
         local textWidth, textHeight = fontString:GetSize()
         local buttonWidth, buttonHeight = self:GetSize()
         if buttonHeight < textHeight then
-            self:SetHeight(textHeight > 20 and textHeight + 2 or 20) -- Minimum 20 in height.
+            -- Minimum 20 in height.
+            self:SetHeight(textHeight > 20 and textHeight + 2 or 20)
         end
         if buttonWidth < textWidth then
             self:SetWidth(textWidth + 2)
@@ -64,15 +67,24 @@ function CUI:CreateTextButton(parentFrame, frameName, callbacks, text)
     end
     local button = CreateFrame("Button", frameName, parentFrame or UIParent)
     button.callbacks = callbacks or {}
-    if not CUI:ApplyTemplate(button, CUI.templates.BorderedFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(button, CUI.templates.HighlightFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(button, CUI.templates.PushableFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(button, CUI.templates.BackgroundFrameTemplate) then return false end
+    if not CUI:ApplyTemplate(button, CUI.templates.BorderedFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(button, CUI.templates.HighlightFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(button, CUI.templates.PushableFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(button, CUI.templates.BackgroundFrameTemplate) then
+        return false
+    end
     local fontString = button:CreateFontString(nil, "OVERLAY", CUI:GetFontBig():GetName())
     fontString:SetJustifyH("LEFT")
     fontString:SetPoint("LEFT", 2, 0)
     button:SetFontString(fontString)
-    button:SetSize(100, 20) -- Default size.
+    -- Default size.
+    button:SetSize(100, 20)
     if text then
         assert(type(text) == "string", "CreateTextButton: 'text' needs to be a string")
         button:SetText(text)
@@ -81,7 +93,9 @@ function CUI:CreateTextButton(parentFrame, frameName, callbacks, text)
     button.SetCallbacks = SetCallbacks
     button.RegisterCallback = RegisterCallback
     button.UnregisterCallback = UnregisterCallback
-    if not button:HookScript("OnClick", Button_OnClick) then return false end
+    if not button:HookScript("OnClick", Button_OnClick) then
+        return false
+    end
     return button
 end
 

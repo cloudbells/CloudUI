@@ -4,7 +4,10 @@ local MINOR = "1"
 
 assert(LibStub, MAJOR .. " requires LibStub")
 local CUI = LibStub:NewLibrary(MAJOR, MINOR)
-if not CUI then return end -- Newer or same version already exists.
+if not CUI then
+    -- Newer or same version already exists.
+    return
+end
 
 -- Variables.
 local widgetVersions = {}

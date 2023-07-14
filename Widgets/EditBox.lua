@@ -1,6 +1,8 @@
 local version, widget = 1, "EDITBOX"
 local CUI = LibStub and LibStub("CloudUI-1.0")
-if not CUI or CUI:GetWidgetVersion(widget) >= version then return end
+if not CUI or CUI:GetWidgetVersion(widget) >= version then
+    return
+end
 
 -- Variables.
 local tabGroups = {}
@@ -113,17 +115,21 @@ end
 local function SetTabIndex(self, tabIndex, tabGroup)
     assert(type(self) == "table" and self:GetObjectType() == "EditBox", "SetTabIndex: the frame needs to be an EditBox")
     assert(type(tabGroup) == "string" or type(self.tabGroup) == "string", "SetTabIndex: 'tabGroup' needs to be a string")
-    if self.tabGroup and tabGroup and self.tabGroup ~= tabGroup then -- If the frame already is in a different tab group than the provided one, remove it from the current tab group.
+    -- If the frame already is in a different tab group than the provided one, remove it from the current tab group.
+    if self.tabGroup and tabGroup and self.tabGroup ~= tabGroup then
         local t = tabGroups[self.tabGroup]
-        if t.tabCount == 1 then -- The tab group has no members so gc the entire tab group.
+        -- The tab group has no members so gc the entire tab group.
+        if t.tabCount == 1 then
             tabGroups[self.tabGroup] = nil
-        else -- Remove the [k, v] and [v, k] pairs otherwise we can tab into the new tab group but get stuck there.
+        else
+            -- Remove the [k, v] and [v, k] pairs otherwise we can tab into the new tab group but get stuck there.
             local index = t[self]
             t[self] = nil
             t[index] = nil
         end
     end
-    tabGroup = tabGroup or self.tabGroup -- Will always prioritize the new tab group over a potential old one.
+    -- Will always prioritize the new tab group over a potential old one.
+    tabGroup = tabGroup or self.tabGroup
     self.tabGroup = tabGroup
     tabGroups[tabGroup] = tabGroups[tabGroup] or {}
     local t = tabGroups[tabGroup]
@@ -135,7 +141,8 @@ local function SetTabIndex(self, tabIndex, tabGroup)
     if tabIndex then
         assert(type(tabIndex) == "number" and tabIndex <= 100 and tabIndex >= -100, "SetTabIndex: 'tabIndex' needs to be a number between -100 and 100")
         newIndex = tabIndex
-    else -- If no tab index is given, assign it whatever the maximum is + 1.
+    else
+        -- If no tab index is given, assign it whatever the maximum is + 1.
         newIndex = t.maxTabIndex + 1
     end
     -- If the given frame already has an index, remove that index so frames don't have double indeces.
@@ -152,9 +159,8 @@ local function SetTabIndex(self, tabIndex, tabGroup)
 end
 
 -- Returns an EditBox with the given frame as parent and with the given name.
--- If providing a tab group, a tab index is required and vice versa. Assigns the editbox the given tab index in the given tab group, otherwise sets a default incremental tab index.
--- Change tab index/tab group using editBox:SetTabIndex(index[, tabGroup]).
--- Returns false if 
+-- If providing a tab group, a tab index is required and vice versa. Assigns the editbox the given tab index in the given tab group, otherwise sets a default
+-- incremental tab index. Change tab index/tab group using editBox:SetTabIndex(index[, tabGroup]). Returns false if something went wrong when creating.
 function CUI:CreateEditBox(parentFrame, frameName, callbacks, tabGroup, tabIndex)
     if callbacks then
         assert(type(callbacks) == "table" and #callbacks > 0, "CreateEditBox: 'callbacks' needs to be a non-empty table")
@@ -165,11 +171,20 @@ function CUI:CreateEditBox(parentFrame, frameName, callbacks, tabGroup, tabIndex
             assert(type(tabGroup) == "number", "CreateEditBox: 'tabIndex' needs to be a number between -100 and 100")
         end
     end
-    local editBox = CreateFrame("EditBox", frameName, parentFrame or UIParent) -- If parentFrame is nil, the size will be fucked.
-    if not CUI:ApplyTemplate(editBox, CUI.templates.BorderedFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(editBox, CUI.templates.HighlightFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(editBox, CUI.templates.BackgroundFrameTemplate) then return false end
-    if not CUI:ApplyTemplate(editBox, CUI.templates.DisableableFrameTemplate) then return false end
+    -- If parentFrame is nil, the size will be fucked.
+    local editBox = CreateFrame("EditBox", frameName, parentFrame or UIParent)
+    if not CUI:ApplyTemplate(editBox, CUI.templates.BorderedFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(editBox, CUI.templates.HighlightFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(editBox, CUI.templates.BackgroundFrameTemplate) then
+        return false
+    end
+    if not CUI:ApplyTemplate(editBox, CUI.templates.DisableableFrameTemplate) then
+        return false
+    end
     editBox:SetAutoFocus(false)
     editBox:SetSize(200, 20)
     editBox:SetFontObject(self:GetFontBig())
@@ -191,14 +206,28 @@ function CUI:CreateEditBox(parentFrame, frameName, callbacks, tabGroup, tabIndex
     editBox.RegisterCallback = RegisterCallback
     editBox.UnregisterCallback = UnregisterCallback
     editBox.SetTabIndex = SetTabIndex
-    if not editBox:HookScript("OnEnterPressed", EditBox_OnEnterPressed) then return false end
-    if not editBox:HookScript("OnEscapePressed", EditBox_OnEscapePressed) then return false end
-    if not editBox:HookScript("OnTabPressed", EditBox_OnTabPressed) then return false end
-    if not editBox:HookScript("OnEditFocusGained", EditBox_OnEditFocusGained) then return false end
-    if not editBox:HookScript("OnDisable", EditBox_OnDisable) then return false end
-    if not editBox:HookScript("OnEnable", EditBox_OnEnable) then return false end
-    if tabGroup then -- User will have to manually assign their own tab index later if not provided here.
-        editBox:SetTabIndex(tabIndex, tabGroup) -- Will assign an index equal to the current max index in the tab group + 1 if tabIndex is nil.
+    if not editBox:HookScript("OnEnterPressed", EditBox_OnEnterPressed) then
+        return false
+    end
+    if not editBox:HookScript("OnEscapePressed", EditBox_OnEscapePressed) then
+        return false
+    end
+    if not editBox:HookScript("OnTabPressed", EditBox_OnTabPressed) then
+        return false
+    end
+    if not editBox:HookScript("OnEditFocusGained", EditBox_OnEditFocusGained) then
+        return false
+    end
+    if not editBox:HookScript("OnDisable", EditBox_OnDisable) then
+        return false
+    end
+    if not editBox:HookScript("OnEnable", EditBox_OnEnable) then
+        return false
+    end
+    -- User will have to manually assign their own tab index later if not provided here.
+    if tabGroup then
+        -- Will assign an index equal to the current max index in the tab group + 1 if tabIndex is nil.
+        editBox:SetTabIndex(tabIndex, tabGroup)
     end
     return editBox
 end
