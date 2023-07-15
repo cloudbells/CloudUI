@@ -8,4 +8,5 @@
     <Script file="Widgets/EditBox.lua" />
     <Script file="Widgets/Dropdown.lua" />
     <Script file="Widgets/Slider.lua" />
+    <Script file="Widgets/Config.lua" />
 </Ui>
