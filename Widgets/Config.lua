@@ -5,14 +5,14 @@ if not CUI or CUI:GetWidgetVersion(widget) >= version then
 end
 
 -- Variables.
-local DEFAULT_WIDTH = 300
-local DEFAULT_HEIGHT = 400
-local MAX_WIDTH = 1200
+local MAX_WIDTH = 50
+local MIN_HEIGHT = 400
 local MAX_HEIGHT = 800
 local WIDGET_MARGIN = 50
 local WIDGET_Y_START = -20
 local WIDGET_X_START = 10
 local currIndex = 1
+local config
 
 -- Called when any widget is hovered over.
 local function Widget_OnEnter(self)
@@ -51,23 +51,24 @@ end
 
 -- Called when the close button is clicked.
 local function CloseButton_OnClick(self)
-    self:GetParent():Hide()
+    config:Hide()
 end
 
 -- Called when the resize button is held.
 local function ResizeButton_OnMouseDown(self)
-    self:GetParent():StartSizing()
+    config:StartSizing()
 end
 
 -- Called when the resize button is released.
 local function ResizeButton_OnMouseUp(self)
-    self:GetParent():StopMovingOrSizing()
+    config:StopMovingOrSizing()
 end
 
 -- Add the given widgets to the frame.
 local function AddWidgets(widgets)
     assert(type(widgets) == "table" and #widgets > 0, "CreateLinkButton: 'widgets' needs to be a non-empty table")
     local fontInstance = CUI:GetFontNormal()
+    local maxWidth = MAX_WIDTH
     while (currIndex <= #widgets) do
         local widget = widgets[currIndex]
         if not widget:HookScript("OnEnter", Widget_OnEnter) then
@@ -78,19 +79,25 @@ local function AddWidgets(widgets)
         end
         local desc = widget:CreateFontString(nil, "BACKGROUND", fontInstance:GetName())
         desc:SetText(widget.desc)
-        desc:SetPoint("TOPLEFT", widget:GetParent(), "TOPLEFT", WIDGET_X_START, -WIDGET_MARGIN * currIndex - WIDGET_Y_START)
+        desc:SetPoint("TOPLEFT", config, "TOPLEFT", WIDGET_X_START, -WIDGET_MARGIN * currIndex - WIDGET_Y_START)
         widget.fontString = desc
-        widget:SetPoint("TOPLEFT", desc, "BOTTOMLEFT", 2, -4)
+        widget:SetPoint("TOPLEFT", desc, "BOTTOMLEFT", 3, -4)
+        if widget:GetWidth() > maxWidth then
+            maxWidth = widget:GetWidth()
+        elseif desc:GetWidth() > maxWidth then
+            maxWidth = desc:GetWidth()
+        end
         currIndex = currIndex + 1
     end
+    MAX_WIDTH = maxWidth > MAX_WIDTH and maxWidth + 20 or MAX_WIDTH
+    config:SetResizeBounds(MAX_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
+    config:SetSize(MAX_WIDTH, MIN_HEIGHT)
 end
 
 -- Creates a config frame that will automatically add the given widgets to it in the order given. Will automatically resize all widgets.
 function CUI:CreateConfig(parentFrame, frameName, titleText, closeButtonTexture)
     -- The scroll frame.
-    local config = CreateFrame("ScrollFrame", frameName, parentFrame or UIParent)
-    config:SetSize(DEFAULT_WIDTH, DEFAULT_HEIGHT)
-    config:SetResizeBounds(DEFAULT_WIDTH, DEFAULT_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
+    config = CreateFrame("ScrollFrame", frameName, parentFrame or UIParent)
     config:SetMovable(true)
     config:SetResizable(true)
     config:SetClampedToScreen(true)
@@ -104,13 +111,18 @@ function CUI:CreateConfig(parentFrame, frameName, titleText, closeButtonTexture)
     config:HookScript("OnHide", OnHide)
     tinsert(UISpecialFrames, config:GetName())
     config:SetPoint("CENTER")
-    config:SetBackgroundColor(0, 0, 0, 0.5)
+    config:SetBackgroundColor(0, 0, 0, 0.7)
     config.AddWidgets = AddWidgets
 
     -- Title fontstring.
     local title = config:CreateFontString(nil, "BACKGROUND", CUI:GetFontBig():GetName())
     title:SetText(titleText)
     title:SetPoint("TOPLEFT", 4, -3)
+    if title:GetWidth() > MAX_WIDTH then
+        MAX_WIDTH = title:GetWidth() + 40
+    end
+    config:SetResizeBounds(MAX_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
+    config:SetSize(MAX_WIDTH, MIN_HEIGHT)
 
     -- Separator.
     local separator = config:CreateTexture(nil, "OVERLAY")
