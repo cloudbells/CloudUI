@@ -69,6 +69,9 @@ local function Slider_OnValueChanged(self, value)
             self.downButton:Enable()
         end
     end
+    for _, callback in pairs(self.callbacks) do
+        callback(self, value)
+    end
 end
 
 -- Called when a button is disabled.
@@ -138,12 +141,16 @@ local function ResetDisableColor(self)
 end
 
 -- Creates and returns a slider in the given parent frame and with the given name, minValue, and maxValue. No default textures so they have to be given.
-function CUI:CreateSlider(parentFrame, frameName, minValue, maxValue, obeyStep, thumbTexture, upTexture, downTexture, isHorizontal)
+function CUI:CreateSlider(parentFrame, frameName, minValue, maxValue, obeyStep, thumbTexture, upTexture, downTexture, isHorizontal, callbacks)
     assert(thumbTexture and type(thumbTexture) == "string", "CreateSlider: 'thumbTexture' needs to be a string")
     assert(type(upTexture) == "string" or type(upTexture) == "nil", "CreateSlider: 'upTexture' needs to be a string or nil")
     assert(type(downTexture) == "string" or type(downTexture) == "nil", "CreateSlider: 'downTexture' needs to be a string or nil")
+    if callbacks then
+        assert(type(callbacks) == "table" and #callbacks > 0, "CreateLinkButton: 'callbacks' needs to be a non-empty table")
+    end
     -- Slider.
     local slider = CreateFrame("Slider", frameName, parentFrame or UIParent)
+    slider.callbacks = callbacks
     if not CUI:ApplyTemplate(slider, CUI.templates.DisableableFrameTemplate) then
         return false
     end
