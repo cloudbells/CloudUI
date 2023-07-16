@@ -7,13 +7,14 @@ end
 -- Variables.
 local MAX_WIDTH = 50
 local MIN_HEIGHT = 200
-local MAX_HEIGHT = 200
+local MAX_HEIGHT = 600
 local WIDGET_MARGIN = 50
-local WIDGET_Y_START = -20
+local WIDGET_Y_START = -16
 local WIDGET_X_START = 10
 local currIndex = 1
-local config
+local scrollParent
 local scrollChild
+local slider
 
 -- Called when any widget is hovered over.
 local function Widget_OnEnter(self)
@@ -52,17 +53,28 @@ end
 
 -- Called when the close button is clicked.
 local function CloseButton_OnClick(self)
-    config:Hide()
+    scrollParent:Hide()
 end
 
 -- Called when the resize button is held.
 local function ResizeButton_OnMouseDown(self)
-    config:StartSizing()
+    scrollParent:StartSizing()
 end
 
 -- Called when the resize button is released.
 local function ResizeButton_OnMouseUp(self)
-    config:StopMovingOrSizing()
+    scrollParent:StopMovingOrSizing()
+end
+
+-- Called when user scrolls in the frame.
+local function OnMouseWheel(_, delta)
+    -- Dividing by delta is done only to achieve the correct sign (negative/positive). Delta is always 1.
+    slider:SetValue(slider:GetValue() - slider:GetValueStep() / delta)
+end
+
+-- Called when the slider value changes (either due to scroll, clicking the up/down buttons or manually dragging the knob).
+local function Slider_OnValueChanged(self, value)
+    scrollParent:SetVerticalScroll(value)
 end
 
 -- Add the given widgets to the frame.
@@ -80,7 +92,7 @@ local function AddWidgets(widgets)
         end
         local desc = widget:CreateFontString(nil, "BACKGROUND", fontInstance:GetName())
         desc:SetText(widget.desc)
-        desc:SetPoint("TOPLEFT", childFrame, "TOPLEFT", WIDGET_X_START, -WIDGET_MARGIN * currIndex - WIDGET_Y_START)
+        desc:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", WIDGET_X_START, -WIDGET_MARGIN * currIndex - WIDGET_Y_START)
         widget.fontString = desc
         widget:SetPoint("TOPLEFT", desc, "BOTTOMLEFT", 3, -4)
         if widget:GetWidth() > maxWidth then
@@ -90,78 +102,125 @@ local function AddWidgets(widgets)
         end
         currIndex = currIndex + 1
     end
-    MAX_WIDTH = maxWidth > MAX_WIDTH and maxWidth + 20 or MAX_WIDTH
-    childFrame:SetResizeBounds(MAX_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
-    childFrame:SetSize(MAX_WIDTH, MIN_HEIGHT)
+    MAX_WIDTH = maxWidth > MAX_WIDTH and maxWidth + 20 + slider:GetWidth() or MAX_WIDTH
+    scrollParent:SetResizeBounds(MAX_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
+end
+
+-- Called when the scroll range has changed for the scroll frame.
+local function OnScrollRangeChanged(self, _, yrange)
+    slider:SetMinMaxValues(1, yrange + 16)
 end
 
 -- Creates a config frame that will automatically add the given widgets to it in the order given. Will automatically resize all widgets.
-function CUI:CreateConfig(parentFrame, frameName, titleText, closeButtonTexture)
+function CUI:CreateConfig(parentFrame, frameName, titleText, closeButtonTexture, minValue, maxValue, thumbTexture, upTexture, downTexture)
     -- The scroll frame.
-    config = CreateFrame("ScrollFrame", frameName, parentFrame or UIParent)
-    config:SetMovable(true)
-    config:SetResizable(true)
-    config:SetClampedToScreen(true)
-    config:SetFrameStrata("HIGH")
-    CUI:ApplyTemplate(config, CUI.templates.BorderedFrameTemplate)
-    CUI:ApplyTemplate(config, CUI.templates.BackgroundFrameTemplate)
-    config:HookScript("OnSizeChanged", OnSizeChanged)
-    config:HookScript("OnMouseDown", OnMouseDown)
-    config:HookScript("OnMouseUp", OnMouseUp)
-    config:HookScript("OnShow", OnShow)
-    config:HookScript("OnHide", OnHide)
-    tinsert(UISpecialFrames, config:GetName())
-    config:SetPoint("CENTER")
-    config:SetBackgroundColor(0, 0, 0, 0.7)
-    config.AddWidgets = AddWidgets
-
-    -- Title fontstring.
-    local title = config:CreateFontString(nil, "BACKGROUND", CUI:GetFontBig():GetName())
-    title:SetText(titleText)
-    title:SetPoint("TOPLEFT", 4, -3)
-    if title:GetWidth() > MAX_WIDTH then
-        MAX_WIDTH = title:GetWidth() + 40
+    scrollParent = CreateFrame("ScrollFrame", frameName and frameName .. "ScrollFrame", parentFrame or UIParent)
+    scrollParent:SetMovable(true)
+    scrollParent:SetResizable(true)
+    scrollParent:SetClampedToScreen(true)
+    scrollParent:SetFrameStrata("HIGH")
+    if not CUI:ApplyTemplate(scrollParent, CUI.templates.BorderedFrameTemplate) then
+        return
     end
-    config:SetResizeBounds(MAX_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
-    config:SetSize(MAX_WIDTH, MIN_HEIGHT)
+    if not CUI:ApplyTemplate(scrollParent, CUI.templates.BackgroundFrameTemplate) then
+        return
+    end
+    if not scrollParent:HookScript("OnSizeChanged", OnSizeChanged) then
+        return
+    end
+    if not scrollParent:HookScript("OnMouseDown", OnMouseDown) then
+        return
+    end
+    if not scrollParent:HookScript("OnMouseUp", OnMouseUp) then
+        return
+    end
+    if not scrollParent:HookScript("OnShow", OnShow) then
+        return
+    end
+    if not scrollParent:HookScript("OnHide", OnHide) then
+        return
+    end
+    if not scrollParent:HookScript("OnMouseWheel", OnMouseWheel) then
+        return
+    end
+    scrollParent:HookScript("OnScrollRangeChanged", OnScrollRangeChanged)
+    tinsert(UISpecialFrames, scrollParent:GetName())
+    scrollParent:SetPoint("CENTER")
+    scrollParent.AddWidgets = AddWidgets
 
-    -- Separator.
-    local separator = config:CreateTexture(nil, "OVERLAY")
-    separator:SetHeight(1)
-    separator:SetColorTexture(1, 1, 1, 1)
-    separator:SetPoint("TOPLEFT", 0, -20)
-    separator:SetPoint("TOPRIGHT", 0, -20)
+    -- Title frame.
+    local titleFrame = CreateFrame("Frame", frameName and frameName .. "TitleFrame", scrollParent)
+    titleFrame:SetSize(1, 24)
+    titleFrame:SetPoint("TOPLEFT")
+    titleFrame:SetPoint("TOPRIGHT")
+    if not CUI:ApplyTemplate(titleFrame, CUI.templates.BorderedFrameTemplate) then
+        return
+    end
+    if not CUI:ApplyTemplate(titleFrame, CUI.templates.BackgroundFrameTemplate) then
+        return
+    end
+    local title = titleFrame:CreateFontString(nil, "BACKGROUND", CUI:GetFontBig():GetName())
+    title:SetText(titleText)
+    title:SetPoint("TOPLEFT", 4, -4)
 
     -- Close button.
     if closeButtonTexture then
-        local closeButton = CreateFrame("Button", frameName and frameName .. "CloseButton", config)
-        CUI:ApplyTemplate(closeButton, CUI.templates.HighlightFrameTemplate)
-        CUI:ApplyTemplate(closeButton, CUI.templates.PushableFrameTemplate)
-        CUI:ApplyTemplate(closeButton, CUI.templates.BorderedFrameTemplate)
-        closeButton:SetSize(20, 20)
+        local closeButton = CreateFrame("Button", frameName and frameName .. "CloseButton", titleFrame)
+        if not CUI:ApplyTemplate(closeButton, CUI.templates.HighlightFrameTemplate) then
+            return
+        end
+        if not CUI:ApplyTemplate(closeButton, CUI.templates.PushableFrameTemplate) then
+            return
+        end
+        if not CUI:ApplyTemplate(closeButton, CUI.templates.BorderedFrameTemplate) then
+            return
+        end
+        local size = titleFrame:GetHeight()
+        closeButton:SetSize(size, size)
         local texture = closeButton:CreateTexture(nil, "ARTWORK")
         texture:SetTexture(closeButtonTexture)
         texture:SetAllPoints()
         closeButton.texture = texture
         closeButton:SetPoint("TOPRIGHT")
-        closeButton:HookScript("OnClick", CloseButton_OnClick)
+        if not closeButton:HookScript("OnClick", CloseButton_OnClick) then
+            return
+        end
     end
 
+    -- Slider.
+    slider = CUI:CreateSlider(scrollParent, frameName and frameName .. "Slider", minValue, maxValue, false,
+                              "Interface/Addons/ClassicGuideMaker/Media/ThumbTexture", "Interface/Addons/ClassicGuideMaker/Media/UpButton",
+                              "Interface/Addons/ClassicGuideMaker/Media/DownButton", false, {Slider_OnValueChanged})
+    slider:SetPoint("TOPRIGHT", 0, -titleFrame:GetHeight() - 19)
+    slider:SetPoint("BOTTOMRIGHT", 0, 18)
+    slider:SetValueStep(50)
+    scrollParent.slider = slider
+
+    if title:GetWidth() > MAX_WIDTH then
+        MAX_WIDTH = title:GetWidth() + 20 + slider:GetWidth()
+    end
+    scrollParent:SetResizeBounds(MAX_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
+
+    -- Child frame.
+    scrollChild = CreateFrame("Frame", frameName, scrollParent)
+    scrollParent:SetScrollChild(scrollChild)
+    scrollChild:SetSize(MAX_WIDTH, 1)
+    scrollParent.widgetFrame = scrollChild
+
     -- Resize button.
-    local resizeButton = CreateFrame("Button", frameName and frameName .. "ResizeButton", config)
+    local resizeButton = CreateFrame("Button", frameName and frameName .. "ResizeButton", scrollParent)
     resizeButton:SetFrameLevel(3)
     resizeButton:SetSize(16, 16)
-    resizeButton:SetPoint("BOTTOMRIGHT")
+    resizeButton:SetPoint("BOTTOMRIGHT", -slider:GetWidth(), -1)
     resizeButton:SetNormalTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Up")
     resizeButton:SetHighlightTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Highlight")
     resizeButton:SetPushedTexture("Interface/ChatFrame/UI-ChatIM-SizeGrabber-Down")
-    resizeButton:HookScript("OnMouseDown", ResizeButton_OnMouseDown)
-    resizeButton:HookScript("OnMouseUp", ResizeButton_OnMouseUp)
+    if not resizeButton:HookScript("OnMouseDown", ResizeButton_OnMouseDown) then
+        return
+    end
+    if not resizeButton:HookScript("OnMouseUp", ResizeButton_OnMouseUp) then
+        return
+    end
 
-    -- Child frame.
-    childFrame = CreateFrame("Frame", frameName, config)
-    childFrame:SetAllPoints(config)
-    config:SetScrollChild(childFrame)
-
-    return config
+    return scrollParent
 end
