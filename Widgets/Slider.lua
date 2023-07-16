@@ -69,8 +69,10 @@ local function Slider_OnValueChanged(self, value)
             self.downButton:Enable()
         end
     end
-    for _, callback in pairs(self.callbacks) do
-        callback(self, value)
+    if self.callbacks then
+        for _, callback in pairs(self.callbacks) do
+            callback(self, value)
+        end
     end
 end
 

@@ -6,13 +6,14 @@ end
 
 -- Variables.
 local MAX_WIDTH = 50
-local MIN_HEIGHT = 400
-local MAX_HEIGHT = 800
+local MIN_HEIGHT = 200
+local MAX_HEIGHT = 200
 local WIDGET_MARGIN = 50
 local WIDGET_Y_START = -20
 local WIDGET_X_START = 10
 local currIndex = 1
 local config
+local scrollChild
 
 -- Called when any widget is hovered over.
 local function Widget_OnEnter(self)
@@ -79,7 +80,7 @@ local function AddWidgets(widgets)
         end
         local desc = widget:CreateFontString(nil, "BACKGROUND", fontInstance:GetName())
         desc:SetText(widget.desc)
-        desc:SetPoint("TOPLEFT", config, "TOPLEFT", WIDGET_X_START, -WIDGET_MARGIN * currIndex - WIDGET_Y_START)
+        desc:SetPoint("TOPLEFT", childFrame, "TOPLEFT", WIDGET_X_START, -WIDGET_MARGIN * currIndex - WIDGET_Y_START)
         widget.fontString = desc
         widget:SetPoint("TOPLEFT", desc, "BOTTOMLEFT", 3, -4)
         if widget:GetWidth() > maxWidth then
@@ -90,8 +91,8 @@ local function AddWidgets(widgets)
         currIndex = currIndex + 1
     end
     MAX_WIDTH = maxWidth > MAX_WIDTH and maxWidth + 20 or MAX_WIDTH
-    config:SetResizeBounds(MAX_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
-    config:SetSize(MAX_WIDTH, MIN_HEIGHT)
+    childFrame:SetResizeBounds(MAX_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
+    childFrame:SetSize(MAX_WIDTH, MIN_HEIGHT)
 end
 
 -- Creates a config frame that will automatically add the given widgets to it in the order given. Will automatically resize all widgets.
@@ -158,8 +159,8 @@ function CUI:CreateConfig(parentFrame, frameName, titleText, closeButtonTexture)
     resizeButton:HookScript("OnMouseUp", ResizeButton_OnMouseUp)
 
     -- Child frame.
-    local childFrame = CreateFrame("Frame", frameName, config)
-    childFrame:SetAllPoints(region)
+    childFrame = CreateFrame("Frame", frameName, config)
+    childFrame:SetAllPoints(config)
     config:SetScrollChild(childFrame)
 
     return config
