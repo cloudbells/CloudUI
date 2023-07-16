@@ -5,7 +5,7 @@ if not CUI or CUI:GetWidgetVersion(widget) >= version then
 end
 
 -- Variables.
-local MAX_WIDTH = 50
+local MAX_WIDTH = 200
 local MIN_HEIGHT = 200
 local MAX_HEIGHT = 600
 local WIDGET_MARGIN = 50
@@ -24,11 +24,6 @@ end
 -- Called when mouse leaves a widget.
 local function Widget_OnLeave(self)
     self.OnLeave(self)
-end
-
--- Called when the size of the frame changes.
-local function OnSizeChanged(self)
-    -- nyi
 end
 
 -- Called when the mouse is down on the frame.
@@ -78,7 +73,7 @@ local function Slider_OnValueChanged(self, value)
 end
 
 -- Add the given widgets to the frame.
-local function AddWidgets(widgets)
+local function AddWidgets(self, widgets)
     assert(type(widgets) == "table" and #widgets > 0, "CreateLinkButton: 'widgets' needs to be a non-empty table")
     local fontInstance = CUI:GetFontNormal()
     local maxWidth = MAX_WIDTH
@@ -104,6 +99,7 @@ local function AddWidgets(widgets)
     end
     MAX_WIDTH = maxWidth > MAX_WIDTH and maxWidth + 20 + slider:GetWidth() or MAX_WIDTH
     scrollParent:SetResizeBounds(MAX_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
+    scrollParent:SetSize(MAX_WIDTH, MIN_HEIGHT)
 end
 
 -- Called when the scroll range has changed for the scroll frame.
@@ -125,9 +121,6 @@ function CUI:CreateConfig(parentFrame, frameName, titleText, closeButtonTexture,
     if not CUI:ApplyTemplate(scrollParent, CUI.templates.BackgroundFrameTemplate) then
         return
     end
-    if not scrollParent:HookScript("OnSizeChanged", OnSizeChanged) then
-        return
-    end
     if not scrollParent:HookScript("OnMouseDown", OnMouseDown) then
         return
     end
@@ -143,9 +136,10 @@ function CUI:CreateConfig(parentFrame, frameName, titleText, closeButtonTexture,
     if not scrollParent:HookScript("OnMouseWheel", OnMouseWheel) then
         return
     end
-    scrollParent:HookScript("OnScrollRangeChanged", OnScrollRangeChanged)
+    if not scrollParent:HookScript("OnScrollRangeChanged", OnScrollRangeChanged) then
+        return
+    end
     tinsert(UISpecialFrames, scrollParent:GetName())
-    scrollParent:SetPoint("CENTER")
     scrollParent.AddWidgets = AddWidgets
 
     -- Title frame.
@@ -200,11 +194,12 @@ function CUI:CreateConfig(parentFrame, frameName, titleText, closeButtonTexture,
         MAX_WIDTH = title:GetWidth() + 20 + slider:GetWidth()
     end
     scrollParent:SetResizeBounds(MAX_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
+    scrollParent:SetSize(MAX_WIDTH, MIN_HEIGHT)
 
     -- Child frame.
     scrollChild = CreateFrame("Frame", frameName, scrollParent)
     scrollParent:SetScrollChild(scrollChild)
-    scrollChild:SetSize(MAX_WIDTH, 1)
+    scrollChild:SetSize(MAX_WIDTH, 1000)
     scrollParent.widgetFrame = scrollChild
 
     -- Resize button.
