@@ -199,7 +199,7 @@ function CUI:CreateConfig(parentFrame, frameName, titleText, closeButtonTexture,
     -- Child frame.
     scrollChild = CreateFrame("Frame", frameName, scrollParent)
     scrollParent:SetScrollChild(scrollChild)
-    scrollChild:SetSize(MAX_WIDTH, 1000)
+    scrollChild:SetSize(MAX_WIDTH, 1)
     scrollParent.widgetFrame = scrollChild
 
     -- Resize button.
