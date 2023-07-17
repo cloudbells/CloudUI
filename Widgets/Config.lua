@@ -115,6 +115,7 @@ function CUI:CreateConfig(parentFrame, frameName, titleText, closeButtonTexture,
     scrollParent:SetResizable(true)
     scrollParent:SetClampedToScreen(true)
     scrollParent:SetFrameStrata("HIGH")
+    scrollParent:SetPoint("CENTER")
     if not CUI:ApplyTemplate(scrollParent, CUI.templates.BorderedFrameTemplate) then
         return
     end
@@ -155,7 +156,7 @@ function CUI:CreateConfig(parentFrame, frameName, titleText, closeButtonTexture,
     end
     local title = titleFrame:CreateFontString(nil, "BACKGROUND", CUI:GetFontBig():GetName())
     title:SetText(titleText)
-    title:SetPoint("TOPLEFT", 4, -4)
+    title:SetPoint("TOPLEFT", 4, -6)
 
     -- Close button.
     if closeButtonTexture then
