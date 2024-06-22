@@ -28,9 +28,7 @@ local function AutoSize(self)
             -- Minimum 20 in height.
             self:SetHeight(textHeight > 20 and textHeight + 2 or 20)
         end
-        if buttonWidth < textWidth then
-            self:SetWidth(textWidth + 2)
-        end
+        self:SetWidth(textWidth + 2)
     end
 end
 

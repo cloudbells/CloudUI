@@ -22,7 +22,13 @@ end
 
 -- Initializes enums.
 local function InitEnums()
-    CUI.templates = Enum({"DisableableFrameTemplate", "BackgroundFrameTemplate", "BorderedFrameTemplate", "HighlightFrameTemplate", "PushableFrameTemplate"})
+    CUI.templates = Enum({
+        "DisableableFrameTemplate",
+        "BackgroundFrameTemplate",
+        "BorderedFrameTemplate",
+        "HighlightFrameTemplate",
+        "PushableFrameTemplate"
+    })
 end
 
 -- Initialize the library.

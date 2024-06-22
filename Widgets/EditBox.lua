@@ -139,7 +139,8 @@ local function SetTabIndex(self, tabIndex, tabGroup)
     t.tabCount = t.tabCount or 0
     local newIndex
     if tabIndex then
-        assert(type(tabIndex) == "number" and tabIndex <= 100 and tabIndex >= -100, "SetTabIndex: 'tabIndex' needs to be a number between -100 and 100")
+        assert(type(tabIndex) == "number" and tabIndex <= 100 and tabIndex >= -100,
+               "SetTabIndex: 'tabIndex' needs to be a number between -100 and 100")
         newIndex = tabIndex
     else
         -- If no tab index is given, assign it whatever the maximum is + 1.
