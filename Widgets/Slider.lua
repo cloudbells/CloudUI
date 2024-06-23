@@ -148,7 +148,7 @@ function CUI:CreateSlider(parentFrame, frameName, minValue, maxValue, obeyStep, 
     assert(type(upTexture) == "string" or type(upTexture) == "nil", "CreateSlider: 'upTexture' needs to be a string or nil")
     assert(type(downTexture) == "string" or type(downTexture) == "nil", "CreateSlider: 'downTexture' needs to be a string or nil")
     if callbacks then
-        assert(type(callbacks) == "table" and #callbacks > 0, "CreateLinkButton: 'callbacks' needs to be a non-empty table")
+        assert(type(callbacks) == "table" and #callbacks > 0, "CreateSlider: 'callbacks' needs to be a non-empty table")
     end
     -- Slider.
     local slider = CreateFrame("Slider", frameName, parentFrame or UIParent)
