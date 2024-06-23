@@ -63,8 +63,23 @@ local function UnregisterCallback(self, callback)
 end
 
 -- Sets the link for the given frame.
-local function SetLink(self, link)
+local function SetLink(self, link, shouldSetColor, shouldSetIcon)
     self.link = link
+    if link then
+        local _, _, quality, _, _, _, _, _, _, texture = GetItemInfo(link)
+        if shouldSetColor then
+            local c = ITEM_QUALITY_COLORS[quality]
+            self:SetBorderColor(c.r, c.g, c.b)
+        end
+        if shouldSetIcon then
+            self:SetIcon(texture)
+        end
+        self:Show()
+    else
+        self:SetIcon(nil)
+        self:ResetBorderColor()
+        self:Hide()
+    end
 end
 
 -- Gets the link for the given frame.
@@ -75,15 +90,22 @@ end
 -- Sets the given frame's icon to the given texture.
 local function SetIcon(self, texture)
     self.icon:SetTexture(texture)
-    self.icon:Show()
+    if texture then
+        self.icon:Show()
+    else
+        self.icon:Hide()
+    end
 end
 
 -- Creates a link button in the given parent frame and with the given name, callbacks, and link. Returns false if creating failed.
-function CUI:CreateLinkButton(parentFrame, frameName, callbacks, link)
-    if callbacks then
-        assert(type(callbacks) == "table" and #callbacks > 0, "CreateLinkButton: 'callbacks' needs to be a non-empty table")
+function CUI:CreateLinkButton(parentFrame, frameName, template, callbacks, link)
+    if template then
+        assert(type(template) == "string", "CreateLinkButton: 'template' needs to be a string")
     end
-    local button = CreateFrame("Button", frameName, parentFrame or UIParent)
+    if callbacks then
+        assert(type(callbacks) == "table", "CreateLinkButton: 'callbacks' needs to be a table")
+    end
+    local button = CreateFrame("Button", frameName, parentFrame or UIParent, template)
     button.callbacks = callbacks or {}
     if not CUI:ApplyTemplate(button, CUI.templates.BorderedFrameTemplate) then
         return false
