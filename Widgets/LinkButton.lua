@@ -4,6 +4,8 @@ if not CUI or CUI:GetWidgetVersion(widget) >= version then
     return
 end
 
+local GetItemInfo = C_Item.GetItemInfo
+
 -- Script handlers.
 
 -- Called when the user clicks the given button.
